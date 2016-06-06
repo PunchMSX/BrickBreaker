@@ -12,13 +12,16 @@
  .ZP
 RESERVED_RLE	.ds  8
 
-
  .BSS
+ 
+ .org $300
 PPUADDR_NAM		.ds 2
 PPUADDR_ATT		.ds 2
 
-PPUCOUNT_NAM	.ds 2
-PPUCOUNT_ATT	.ds 2
+PPUCOUNT_NAM	.ds 1
+PPUCOUNT_ATT	.ds 1
+
+OFFSET_ATT		.ds 1
 
  
  .code
@@ -97,6 +100,13 @@ RESET:
 	STA PPUADDR_NAM
 	LDA #$00
 	STA PPUADDR_NAM + 1
+	
+	LDA #(64/8)
+	STA PPUCOUNT_ATT
+	LDA #$23
+	STA PPUADDR_ATT
+	LDA #$C0
+	STA PPUADDR_ATT + 1
 MainLoop:
 	JMP MainLoop
 	
@@ -116,7 +126,7 @@ Main_Palette:
 	
 BG_Playfield:
 	.incbin "art/playfield.rle"
-BG_Playfield_att:
+BG_Playfield_Att:
 	.incbin "art/playfield.atr"
 	
 NMI:
@@ -142,6 +152,40 @@ NMI:
 	BCC .exit
 	INC PPUADDR_NAM
 .exit
+	LDA PPUCOUNT_ATT
+	BEQ .exit2
+	DEC PPUCOUNT_ATT
+	
+	LDA $2002
+	LDA PPUADDR_ATT
+	STA $2006
+	LDA PPUADDR_ATT + 1
+	STA $2006
+	LDX OFFSET_ATT
+	LDY #0
+.loop1
+	LDA BG_Playfield_Att, x
+	STA $2007
+	INX
+	INY
+	CPY #8
+	BNE .loop1
+	
+	
+	LDA OFFSET_ATT
+	CLC
+	ADC #8
+	STA OFFSET_ATT
+	
+	LDA PPUADDR_ATT + 1
+	CLC
+	ADC #8
+	STA PPUADDR_ATT + 1
+	BCC .exit2
+	INC PPUADDR_ATT
+	
+	
+.exit2
 	LDA #0
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
