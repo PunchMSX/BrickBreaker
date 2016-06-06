@@ -14,6 +14,11 @@ RESERVED_RLE	.ds  8
 
 
  .BSS
+PPUADDR_NAM		.ds 2
+PPUADDR_ATT		.ds 2
+
+PPUCOUNT_NAM	.ds 2
+PPUCOUNT_ATT	.ds 2
 
  
  .code
@@ -86,12 +91,13 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
-	LDA #32
-	STA $440
+	LDA #(32*30)/32
+	STA PPUCOUNT_NAM
 	LDA #$20
-	STA $441
+	STA PPUADDR_NAM
+	LDA #$00
+	STA PPUADDR_NAM + 1
 MainLoop:
-
 	JMP MainLoop
 	
 
@@ -110,29 +116,31 @@ Main_Palette:
 	
 BG_Playfield:
 	.incbin "art/playfield.rle"
+BG_Playfield_att:
+	.incbin "art/playfield.atr"
 	
 NMI:
-	LDA $440
+	LDA PPUCOUNT_NAM
 	BEQ .exit
-	DEC $440
+	DEC PPUCOUNT_NAM
 	
 	LDA #32
 	STA RLE_MAX
 	
 	LDA $2002
-	LDA $441
+	LDA PPUADDR_NAM
 	STA $2006
-	LDA $442
+	LDA PPUADDR_NAM + 1
 	STA $2006
 	LDX #LOW(BG_Playfield)
 	LDY #HIGH(BG_Playfield)
 	JSR unrle_partial_resume
-	LDA $442
+	LDA PPUADDR_NAM + 1
 	CLC
 	ADC #32
-	STA $442
+	STA PPUADDR_NAM + 1
 	BCC .exit
-	INC $441
+	INC PPUADDR_NAM
 .exit
 	LDA #0
 	STA $2005
