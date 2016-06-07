@@ -12,6 +12,9 @@
  .ZP
 RESERVED_RLE	.ds  8
 
+METASPR_ADDR	.ds 2
+OAM_ADDR		.ds 2
+
  .BSS
  
  .org $300
@@ -22,6 +25,15 @@ PPUCOUNT_NAM	.ds 1
 PPUCOUNT_ATT	.ds 1
 
 OFFSET_ATT		.ds 1
+
+ .org $400
+METASPR_MAX		= 8
+METASPR_OAMADDR = $0280
+METASPR_NUM		.ds 1 ;Number of active metasprites
+METASPR_LEN		.ds 1 ;Temp var during metasprite update
+METASPR_INDEX	.ds METASPR_MAX
+METASPR_X		.ds METASPR_MAX
+METASPR_Y		.ds METASPR_MAX
 
  
  .code
@@ -99,7 +111,7 @@ RESET:
 	LDA #%00011110
 	STA $2001 ;enable ppu rendering
 	
-	LDA #$80
+	LDA #$88
 	STA $2000
 	
 	LDA #0
@@ -119,13 +131,95 @@ RESET:
 	STA PPUADDR_ATT
 	LDA #$C0
 	STA PPUADDR_ATT + 1
+	
+	LDA #1
+	STA METASPR_NUM
+	LDA #0
+	STA METASPR_INDEX
+	LDA #120
+	STA METASPR_X
+	STA METASPR_Y
 MainLoop:
+	JSR MetaSpr_Update
 	JMP MainLoop
 	
 
  .bank 1
  .org $A000
+	
+Metasprite1:
+	.db 3 * 4
+	.db 0, $10, $02, -12
+	.db 0, $11, $02, -04
+	.db 0, $12, $02, 04
+
+Metasprite_Table
+	.dw Metasprite1
  
+MetaSpr_Update:
+	LDA #LOW(METASPR_OAMADDR)
+	STA OAM_ADDR
+	LDA #HIGH(METASPR_OAMADDR)
+	STA OAM_ADDR + 1
+	
+;X is current metasprite
+;Y is an indexer to read a metasprite address and to read its contents
+	LDX #0
+.forEach: ;For each metasprite in METASPR_INDEX (0 to METASPR_NUM)
+	CPX METASPR_NUM
+	BEQ .forEachEnd
+	LDA METASPR_INDEX, x
+	ASL A
+	TAY
+	LDA Metasprite_Table, y
+	STA METASPR_ADDR
+	LDA Metasprite_Table + 1, y
+	STA METASPR_ADDR + 1
+	
+	
+;***** Reading metasprite data ****
+	LDY #0
+	LDA [METASPR_ADDR], y
+	STA METASPR_LEN
+	INC METASPR_ADDR
+	BNE .innerLoop
+	INC METASPR_ADDR + 1
+.innerLoop
+	;Y Position
+	LDA [METASPR_ADDR], y
+	CLC
+	ADC METASPR_Y, x
+	STA [OAM_ADDR], y	
+	INY 
+	;Tile ID
+	LDA [METASPR_ADDR], y
+	STA [OAM_ADDR], y
+	INY
+	;Attribute Byte
+	LDA [METASPR_ADDR], y
+	STA [OAM_ADDR], y
+	INY
+	;X Position
+	LDA [METASPR_ADDR], y
+	CLC
+	ADC METASPR_X, x
+	STA [OAM_ADDR], y
+	INY
+	
+	CPY METASPR_LEN
+	BNE .innerLoop
+;*********************************
+	LDA METASPR_LEN
+	CLC
+	ADC OAM_ADDR
+	STA OAM_ADDR ;no overflow check
+	
+	INX
+	JMP .forEach
+.forEachEnd:
+	;Todo: fill unused metasprite OAM with $FE
+	RTS
+
  .bank 2
  .org $C000
  
