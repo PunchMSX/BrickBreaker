@@ -29,6 +29,18 @@ OFFSET_ATT		.ds 1
  .bank 0
  .org $8000
 	.include "lib/rle.asm"
+
+DrawScanline: ;Good old CPU processing time indicator 
+	LDA #%00011111  ;Switches gfx to monochrome mode
+	STA $2001
+	LDX #23 * 5; Second number = no. of lines
+.1 ;Loop enough cycles to "draw" the scanlines
+	DEX
+	BNE .1
+	
+	LDA #%00011110 ;restore $2001 reg settings
+	STA $2001
+	RTS
 	
 waitPPU:
 	BIT $2002
@@ -94,7 +106,7 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
-	LDA #(32*30)/32
+	LDA #(32*30)/24
 	STA PPUCOUNT_NAM
 	LDA #$20
 	STA PPUADDR_NAM
@@ -130,11 +142,23 @@ BG_Playfield_Att:
 	.incbin "art/playfield.atr"
 	
 NMI:
+	PHA
+	TXA
+	PHA
+	TYA
+	PHA
+	PHP;Save Processor Status
+
+	LDA #0
+	STA $2003
+	LDA #2
+	STA $4014
+	
 	LDA PPUCOUNT_NAM
 	BEQ .exit
 	DEC PPUCOUNT_NAM
 	
-	LDA #32
+	LDA #24
 	STA RLE_MAX
 	
 	LDA $2002
@@ -147,7 +171,7 @@ NMI:
 	JSR unrle_partial_resume
 	LDA PPUADDR_NAM + 1
 	CLC
-	ADC #32
+	ADC #24
 	STA PPUADDR_NAM + 1
 	BCC .exit
 	INC PPUADDR_NAM
@@ -189,7 +213,25 @@ NMI:
 	LDA #0
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
-	rti
+	
+Letswastetiem:
+	LDX #0
+	LDY #2
+.1
+	DEX
+	BNE .1
+	DEY
+	BNE .1
+	
+	JSR DrawScanline
+	
+	PLP
+	PLA
+	TAY
+	PLA
+	TAX
+	PLA	;Restore Processor Status
+	RTI
  
  .org $FFFA
 	 .dw NMI
