@@ -132,30 +132,73 @@ RESET:
 	LDA #$C0
 	STA PPUADDR_ATT + 1
 	
-	LDA #1
+	LDA #2
 	STA METASPR_NUM
-	LDA #0
+	LDA #1
 	STA METASPR_INDEX
 	LDA #120
 	STA METASPR_X
 	STA METASPR_Y
+	
+	LDA #4
+	STA METASPR_INDEX + 1
+	LDA #112
+	STA METASPR_X + 1
+	STA METASPR_Y + 1
 MainLoop:
 	JSR MetaSpr_Update
+	;JSR DrawScanline
 	JMP MainLoop
 	
 
  .bank 1
  .org $A000
-	
-Metasprite1:
+Umbrella_Up:
 	.db 3 * 4
 	.db 0, $10, $02, -12
 	.db 0, $11, $02, -04
 	.db 0, $12, $02, 04
+Umbrella_Down:
+	.db 3 * 4
+	.db 0, $10, $82, -12
+	.db 0, $11, $82, -04
+	.db 0, $12, $82, 04
+Chara_Up:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $14, $02, 00
+Chara_Up_Blink:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $1a, $02, 00
+Chara_Down:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $15, $02, 00
+Chara_Down_Blink:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $19, $42, 00
+Chara_Hit_1:
+	.db 2 * 4
+	.db 0, $16, $02, -8
+	.db 0, $17, $02, 00
+Chara_Hit_2:
+	.db 2 * 4
+	.db 0, $17, $42, -8
+	.db 0, $16, $42, 00
+	
+	
+Metasprite_Table:
+	.dw Umbrella_Up
+	.dw Umbrella_Down
+	.dw Chara_Up
+	.dw Chara_Up_Blink
+	.dw Chara_Down
+	.dw Chara_Down_Blink
+	.dw Chara_Hit_1
+	.dw Chara_Hit_2
 
-Metasprite_Table
-	.dw Metasprite1
- 
 MetaSpr_Update:
 	LDA #LOW(METASPR_OAMADDR)
 	STA OAM_ADDR
