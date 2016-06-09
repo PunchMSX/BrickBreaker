@@ -35,6 +35,11 @@ METASPR_INDEX	.ds METASPR_MAX
 METASPR_X		.ds METASPR_MAX
 METASPR_Y		.ds METASPR_MAX
 
+
+ .org $500
+CTRLPORT_1		.ds 1
+CTRLPORT_2		.ds 1
+
  
  .code
  
@@ -42,6 +47,30 @@ METASPR_Y		.ds METASPR_MAX
  .org $8000
 	.include "lib/rle.asm"
 
+Ctrl_Read:
+	LDA #1
+	STA $4016
+	LDA #0
+	STA $4016
+	
+	LDX #8
+.1
+	LDA $4016
+	ROR A
+	ROL CTRLPORT_1
+	DEX
+	BNE .1
+
+	LDX #8
+.2
+	LDA $4017
+	ROR A
+	ROL CTRLPORT_2
+	DEX
+	BNE .2
+	
+	RTS
+	
 DrawScanline: ;Good old CPU processing time indicator 
 	LDA #%00011111  ;Switches gfx to monochrome mode
 	STA $2001
@@ -347,6 +376,7 @@ NMI:
 	
 	
 .exit2
+	JSR Ctrl_Read
 	LDA #0
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
