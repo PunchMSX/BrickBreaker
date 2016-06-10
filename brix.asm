@@ -170,56 +170,36 @@ RESET:
 	LDA #$C0
 	STA PPUADDR_ATT + 1
 	
-	LDA #8
+	LDA #4
 	STA METASPR_NUM
 	
-	LDA #1
+	LDA #2
 	STA METASPR_INDEX
-	LDA #120
+	LDA #128
 	STA METASPR_X
+	LDA #39
 	STA METASPR_Y
 	
-	LDA #4
+	LDA #5
 	STA METASPR_INDEX + 1
-	LDA #112
+	LDA #120
 	STA METASPR_X + 1
+	LDA #31
 	STA METASPR_Y + 1
 	
 	LDA #1
 	STA METASPR_INDEX + 2
-	LDA #32
+	LDA #128
 	STA METASPR_X + 2
+	LDA #191
 	STA METASPR_Y + 2
 	
-	LDA #1
+	LDA #3
 	STA METASPR_INDEX + 3
-	LDA #64
+	LDA #120
 	STA METASPR_X + 3
+	LDA #199
 	STA METASPR_Y + 3
-	
-	LDA #1
-	STA METASPR_INDEX + 4
-	LDA #48
-	STA METASPR_X + 4
-	STA METASPR_Y + 4
-	
-	LDA #1
-	STA METASPR_INDEX + 5
-	LDA #88
-	STA METASPR_X + 5
-	STA METASPR_Y + 5
-	
-	LDA #1
-	STA METASPR_INDEX + 6
-	LDA #99
-	STA METASPR_X + 6
-	STA METASPR_Y + 6
-	
-	LDA #1
-	STA METASPR_INDEX + 7
-	LDA #122
-	STA METASPR_X + 7
-	STA METASPR_Y + 7
 	
 MainLoop:
 	LDA #NEXTFRAME_NO
@@ -245,9 +225,9 @@ Umbrella_Up:
 	.db 0, $12, $02, 04
 Umbrella_Down:
 	.db 3 * 4
-	.db 0, $10, $82, -12
-	.db 0, $11, $82, -04
-	.db 0, $12, $82, 04
+	.db 0, $10, $83, -12
+	.db 0, $11, $83, -04
+	.db 0, $12, $83, 04
 Chara_Up:
 	.db 2 * 4
 	.db 0, $13, $02, -8
@@ -258,12 +238,12 @@ Chara_Up_Blink:
 	.db 0, $1a, $02, 00
 Chara_Down:
 	.db 2 * 4
-	.db 0, $13, $02, -8
-	.db 0, $15, $02, 00
+	.db 0, $13, $03, -8
+	.db 0, $15, $03, 00
 Chara_Down_Blink:
 	.db 2 * 4
-	.db 0, $13, $02, -8
-	.db 0, $19, $42, 00
+	.db 0, $13, $03, -8
+	.db 0, $19, $43, 00
 Chara_Hit_1:
 	.db 2 * 4
 	.db 0, $16, $02, -8
@@ -278,6 +258,7 @@ Projectile_Default:
 	
 	
 Metasprite_Table:
+	.dw Projectile_Default
 	.dw Umbrella_Up
 	.dw Umbrella_Down
 	.dw Chara_Up
@@ -286,8 +267,7 @@ Metasprite_Table:
 	.dw Chara_Down_Blink
 	.dw Chara_Hit_1
 	.dw Chara_Hit_2
-	.dw Projectile_Default
-
+	
 MetaSpr_Update:
 	LDA #LOW(METASPR_OAMADDR)
 	STA OAM_ADDR
