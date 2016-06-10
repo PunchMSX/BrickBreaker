@@ -16,8 +16,18 @@ METASPR_ADDR	.ds 2
 OAM_ADDR		.ds 2
 
  .BSS
+ .org $100
+STACK			.ds 256
+ 
+ .org $200
+OAM_COPY		.ds 256
  
  .org $300
+CPU_NEXTFRAME	.ds 1
+NEXTFRAME_YES 	= 0
+NEXTFRAME_NO	= 1
+
+ 
 PPUADDR_NAM		.ds 2
 PPUADDR_ATT		.ds 2
 
@@ -27,14 +37,13 @@ PPUCOUNT_ATT	.ds 1
 OFFSET_ATT		.ds 1
 
  .org $400
-METASPR_MAX		= 8
-METASPR_OAMADDR = $0280
+METASPR_MAX		= 24
+METASPR_OAMADDR = $0220
 METASPR_NUM		.ds 1 ;Number of active metasprites
 METASPR_LEN		.ds 1 ;Temp var during metasprite update
 METASPR_INDEX	.ds METASPR_MAX
 METASPR_X		.ds METASPR_MAX
 METASPR_Y		.ds METASPR_MAX
-
 
  .org $500
 CTRLPORT_1		.ds 1
@@ -161,8 +170,9 @@ RESET:
 	LDA #$C0
 	STA PPUADDR_ATT + 1
 	
-	LDA #2
+	LDA #8
 	STA METASPR_NUM
+	
 	LDA #1
 	STA METASPR_INDEX
 	LDA #120
@@ -174,9 +184,55 @@ RESET:
 	LDA #112
 	STA METASPR_X + 1
 	STA METASPR_Y + 1
+	
+	LDA #1
+	STA METASPR_INDEX + 2
+	LDA #32
+	STA METASPR_X + 2
+	STA METASPR_Y + 2
+	
+	LDA #1
+	STA METASPR_INDEX + 3
+	LDA #64
+	STA METASPR_X + 3
+	STA METASPR_Y + 3
+	
+	LDA #1
+	STA METASPR_INDEX + 4
+	LDA #48
+	STA METASPR_X + 4
+	STA METASPR_Y + 4
+	
+	LDA #1
+	STA METASPR_INDEX + 5
+	LDA #88
+	STA METASPR_X + 5
+	STA METASPR_Y + 5
+	
+	LDA #1
+	STA METASPR_INDEX + 6
+	LDA #99
+	STA METASPR_X + 6
+	STA METASPR_Y + 6
+	
+	LDA #1
+	STA METASPR_INDEX + 7
+	LDA #122
+	STA METASPR_X + 7
+	STA METASPR_Y + 7
+	
 MainLoop:
+	LDA #NEXTFRAME_NO
+	STA CPU_NEXTFRAME
+	
+	JSR Ctrl_Read
 	JSR MetaSpr_Update
-	;JSR DrawScanline
+	JSR DrawScanline
+	
+.waitPPU
+	LDA CPU_NEXTFRAME
+	CMP #NEXTFRAME_YES
+	BNE .waitPPU
 	JMP MainLoop
 	
 
@@ -216,6 +272,9 @@ Chara_Hit_2:
 	.db 2 * 4
 	.db 0, $17, $42, -8
 	.db 0, $16, $42, 00
+Projectile_Default:
+	.db 1 * 4
+	.db -4, $06, $02, -4
 	
 	
 Metasprite_Table:
@@ -227,6 +286,7 @@ Metasprite_Table:
 	.dw Chara_Down_Blink
 	.dw Chara_Hit_1
 	.dw Chara_Hit_2
+	.dw Projectile_Default
 
 MetaSpr_Update:
 	LDA #LOW(METASPR_OAMADDR)
@@ -376,21 +436,12 @@ NMI:
 	
 	
 .exit2
-	JSR Ctrl_Read
 	LDA #0
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
-Letswastetiem:
-	LDX #0
-	LDY #2
-.1
-	DEX
-	BNE .1
-	DEY
-	BNE .1
-	
-	JSR DrawScanline
+	LDA #NEXTFRAME_YES
+	STA CPU_NEXTFRAME
 	
 	PLP
 	PLA
