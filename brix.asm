@@ -39,9 +39,17 @@ OFFSET_ATT		.ds 1
  .org $400
 METASPR_MAX		= 24
 METASPR_OAMADDR = $0220
+LIST_EMPTY	= $FF
+
 METASPR_NUM		.ds 1 ;Number of active metasprites
 METASPR_LEN		.ds 1 ;Temp var during metasprite update
-METASPR_INDEX	.ds METASPR_MAX
+
+METASPR_INDEX	.ds METASPR_MAX ;Linked list of sprite objects
+METASPR_NEXT	.ds METASPR_MAX ;and pointer to next sprite.
+
+METASPR_FREE	.ds 1 ;first free slot
+METASPR_FIRST	.ds 1 ;first occupied slot
+METASPR_LAST	.ds 1 ;last occupied slot
 METASPR_X		.ds METASPR_MAX
 METASPR_Y		.ds METASPR_MAX
 
@@ -49,7 +57,11 @@ METASPR_Y		.ds METASPR_MAX
 CTRLPORT_1		.ds 1
 CTRLPORT_2		.ds 1
 
- 
+BALL_MAX		= 1
+BALL_SPEEDX		.ds BALL_MAX
+BALL_SPEEDY		.ds BALL_MAX 
+BALL_METASPR	.ds BALL_MAX
+
  .code
  
  .bank 0
@@ -146,6 +158,34 @@ RESET:
 	CPX #32
 	BNE .loadPaletteLoop
 	
+	
+	LDX #0
+.initMetasprite:
+	LDA #$FF
+	STA METASPR_INDEX, x
+	INX
+	CPX #METASPR_MAX
+	BNE .initMetasprite
+	
+	LDX #0
+.initMetasprPointers:
+	TXA
+	CLC
+	ADC #1
+	STA METASPR_NEXT, x
+	INX
+	CPX #METASPR_MAX
+	BNE .initMetasprPointers
+	
+	LDA #$FF
+	STA METASPR_NEXT + (METASPR_MAX - 1)
+	
+	LDA #0
+	STA METASPR_FREE
+	LDA #$FF
+	STA METASPR_FIRST
+	STA METASPR_LAST
+	
 	LDA #%00011110
 	STA $2001 ;enable ppu rendering
 	
@@ -170,7 +210,9 @@ RESET:
 	LDA #$C0
 	STA PPUADDR_ATT + 1
 	
-	LDA #4
+	JMP MainLoop
+;/////////////////////////////////////////////////////
+	LDA #5
 	STA METASPR_NUM
 	
 	LDA #2
@@ -201,12 +243,31 @@ RESET:
 	LDA #199
 	STA METASPR_Y + 3
 	
+	LDA #0
+	STA METASPR_INDEX + 4
+	LDA #128
+	STA METASPR_X + 4
+	STA METASPR_Y + 4
+	
+	LDA #4
+	STA BALL_METASPR
+	LDA #1
+	STA BALL_SPEEDX
+	STA BALL_SPEEDY
+	
 MainLoop:
 	LDA #NEXTFRAME_NO
 	STA CPU_NEXTFRAME
-	
+	INC $666
+	LDA $666
+	AND #%01111111
+	BNE .c
+	LDX CTRLPORT_1
+	JSR Metasprite_Add
+.c
 	JSR Ctrl_Read
-	JSR MetaSpr_Update
+	;JSR Ball_Update
+	;JSR MetaSpr_Update
 	JSR DrawScanline
 	
 .waitPPU
@@ -267,6 +328,49 @@ Metasprite_Table:
 	.dw Chara_Down_Blink
 	.dw Chara_Hit_1
 	.dw Chara_Hit_2
+	
+	;Input: X = metasprite ID.
+	;Output: X = index of insertion in metasprite list.
+Metasprite_Add:
+	LDY METASPR_FREE ;Loads ID of first free slot
+	CPY #$FF
+	BEQ .fail ;if 255 then list is full
+	
+	TXA
+	STA METASPR_INDEX, y ;Store metasprite ID in list
+	
+	;TODO: if full, METASPR_FREE = 255
+	LDA METASPR_NEXT, y ;Loads pointer to next empty slot
+	STA METASPR_FREE
+	
+	LDX METASPR_FIRST
+	CPX #$FF		
+	BNE .firstInsertion
+	
+.notFirstInsertion:
+	LDA METASPR_LAST
+	TAX ;Saves pointer to last object in reg. X
+	STY METASPR_LAST ;New object is tail
+	TYA
+	STA METASPR_NEXT, x ;Old tail now points to new tail
+	LDA #$FF
+	STA METASPR_NEXT, y ;and new points to nothing.
+	JMP .success
+	
+.firstInsertion
+	STY METASPR_FIRST ;If it is first insertion, object is head
+	STY METASPR_LAST  ;New object is also the list's tail
+	LDA #$FF
+	STA METASPR_NEXT, y ;and points to nothing.
+	
+.success:
+	TYA
+	TAX
+	RTS
+	
+.fail
+	LDX #$FF
+	RTS
 	
 MetaSpr_Update:
 	LDA #LOW(METASPR_OAMADDR)
@@ -334,6 +438,23 @@ MetaSpr_Update:
 
  .bank 2
  .org $C000
+ ;ldx ball_index
+Ball_Update:
+	LDA BALL_METASPR, x
+	TAY
+	LDA BALL_SPEEDX, x
+	CLC
+	ADC METASPR_X, y
+	STA METASPR_X, y
+	
+	LDA BALL_SPEEDY, x
+	CLC
+	ADC METASPR_Y, y
+	STA METASPR_Y, y
+	
+	RTS
+ 
+ 
  
  .bank 3
  .org $E000
