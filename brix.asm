@@ -26,7 +26,6 @@ OAM_COPY		.ds 256
 CPU_NEXTFRAME	.ds 1
 NEXTFRAME_YES 	= 0
 NEXTFRAME_NO	= 1
-
  
 PPUADDR_NAM		.ds 2
 PPUADDR_ATT		.ds 2
@@ -56,6 +55,8 @@ METASPR_Y		.ds METASPR_MAX
  .org $500
 CTRLPORT_1		.ds 1
 CTRLPORT_2		.ds 1
+
+TEMP			.ds 1
 
 BALL_MAX		= 1
 BALL_SPEEDX		.ds BALL_MAX
@@ -210,6 +211,36 @@ RESET:
 	LDA #$C0
 	STA PPUADDR_ATT + 1
 	
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #0
+	JSR Metasprite_Remove
+	LDX #1
+	JSR Metasprite_Remove
+	LDX #2
+	JSR Metasprite_Remove
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #1
+	JSR Metasprite_Add
+	LDX #0
+	JSR Metasprite_Remove
 	JMP MainLoop
 ;/////////////////////////////////////////////////////
 	LDA #5
@@ -255,6 +286,7 @@ RESET:
 	STA BALL_SPEEDX
 	STA BALL_SPEEDY
 	
+	
 MainLoop:
 	LDA #NEXTFRAME_NO
 	STA CPU_NEXTFRAME
@@ -263,7 +295,18 @@ MainLoop:
 	AND #%01111111
 	BNE .c
 	LDX CTRLPORT_1
+	CPX #$80
+	BEQ .d
+	CPX #$40
+	BNE .c
 	JSR Metasprite_Add
+	LDA #0
+	STA $667
+	JMP .c
+.d
+	LDX $667
+	JSR Metasprite_Remove
+	INC $667
 .c
 	JSR Ctrl_Read
 	;JSR Ball_Update
@@ -345,7 +388,7 @@ Metasprite_Add:
 	
 	LDX METASPR_FIRST
 	CPX #$FF		
-	BNE .firstInsertion
+	BEQ .firstInsertion
 	
 .notFirstInsertion:
 	LDA METASPR_LAST
@@ -371,6 +414,82 @@ Metasprite_Add:
 .fail
 	LDX #$FF
 	RTS
+	
+	;This is a mess but it's guaranteed to work
+	;I know where this needs cleaning, I'm just too lazy.
+	;X - index
+Metasprite_Remove:
+	LDY METASPR_FIRST
+	CPY #$FF
+	BEQ .failure ;If list is empty then quit.
+	
+	STX TEMP
+	
+	LDA METASPR_FIRST
+	CMP TEMP
+	BEQ .isFirst ;Is the object to be removed first?
+	
+.findPrevious:
+	TAY
+	LDA METASPR_NEXT, y
+	;TAY
+	CMP #$FF
+	BEQ .failure ;if next equals $FF then we reached end of list, failure
+	CMP TEMP
+	BNE .findPrevious
+
+	;y is the object previous to the object to be deleted in the list
+.found
+	LDA METASPR_NEXT, x ;Gets next from object to be removed
+	STA METASPR_NEXT, y ;previous->next = object->next
+	CMP #$FF
+	BNE .delete
+	LDA METASPR_NEXT, y
+	STA METASPR_LAST ;If previous->next = NULL then last = NULL
+	JMP .delete
+	
+.isFirst:
+	LDA METASPR_NEXT, y
+	STA METASPR_FIRST	;First now points to object next to removed one
+	CMP #$FF
+	BNE .delete
+	STA METASPR_LAST	;If first equals null then list is empty, so last = null
+
+.delete:
+	LDA METASPR_FREE
+	STA METASPR_NEXT, x ;Deleted object points to first free slot
+	STX METASPR_FREE	;Deleted object now first free object slot
+	LDA #$FF
+	STA METASPR_INDEX, x
+	
+	RTS ;SUCCESS!!!]
+	
+.failure:
+	RTS
+	
+	
+	
+;	if List is empty quit
+;	load First
+;	if first equals target
+;	{
+;		first equals target->next
+;		if first equals null then Last equals null
+;		Free equals target / target->next equals Free
+;		end
+;	}
+;	if first not equal target
+;	{
+;		while obj->next not null
+;		{
+;			if obj->next equals target then leave
+;			if obj->next equals null then end
+;		}
+;		obj->next equals target->next
+;		if obj->next equals null then Last equals obj
+;		Free equals target / target->next equals Free
+;		end
+;	}
 	
 MetaSpr_Update:
 	LDA #LOW(METASPR_OAMADDR)
