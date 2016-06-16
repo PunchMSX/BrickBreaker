@@ -298,14 +298,15 @@ MainLoop:
 	BEQ .d
 	CPX #$40
 	BNE .c
+	LDX #0
 	JSR Metasprite_Add
 	LDA #0
 	STA $667
 	JMP .c
 .d
-	LDX $667
+	LDX $3ff
 	JSR Metasprite_Remove
-	INC $667
+	;INC $667
 .c
 	JSR Ctrl_Read
 	;JSR Ball_Update
@@ -415,7 +416,7 @@ Metasprite_Add:
 	RTS
 	
 	;This is a mess but it's guaranteed to work
-	;I know where this needs cleaning, I'm just too lazy.
+	;I know where this needs cleaning, I'm just lazy.
 	;X - index
 Metasprite_Remove:
 	LDY METASPR_FIRST
@@ -444,7 +445,7 @@ Metasprite_Remove:
 	CMP #$FF
 	BNE .delete
 	LDA METASPR_NEXT, y
-	STA METASPR_LAST ;If previous->next = NULL then last = NULL
+	STy METASPR_LAST ;If previous->next = NULL then last = NULL
 	JMP .delete
 	
 .isFirst:
@@ -547,13 +548,32 @@ MetaSpr_Update:
 	LDA METASPR_LEN
 	CLC
 	ADC OAM_ADDR
-	STA OAM_ADDR ;no overflow check
+	STA OAM_ADDR
+	BCS .end_overflow	;if overflow, end in error
 	
 	LDA METASPR_NEXT, x
 	TAX
 	JMP .forEach
 .forEachEnd:
 	;Todo: fill unused metasprite OAM with $FE
+.cleanup:
+	LDA #$FE
+	LDY #0
+	STA [OAM_ADDR], y
+	INY
+	INY
+	INY
+	STA [OAM_ADDR], y
+	LDA #4
+	CLC
+	ADC OAM_ADDR
+	STA OAM_ADDR
+	BCC .cleanup
+	
+.end
+	RTS
+	
+.end_overflow ;Do error handling here
 	RTS
 
  .bank 2
