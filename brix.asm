@@ -241,10 +241,9 @@ RESET:
 	JSR Metasprite_Add
 	LDX #0
 	JSR Metasprite_Remove
-	JMP MainLoop
-;/////////////////////////////////////////////////////
-	LDA #5
-	STA METASPR_NUM
+	
+	;LDA #5
+	;STA METASPR_NUM
 	
 	LDA #2
 	STA METASPR_INDEX
@@ -310,7 +309,7 @@ MainLoop:
 .c
 	JSR Ctrl_Read
 	;JSR Ball_Update
-	;JSR MetaSpr_Update
+	JSR MetaSpr_Update
 	JSR DrawScanline
 	
 .waitPPU
@@ -499,9 +498,10 @@ MetaSpr_Update:
 	
 ;X is current metasprite
 ;Y is an indexer to read a metasprite address and to read its contents
-	LDX #0
+	LDX METASPR_FIRST
+	;LDX #0
 .forEach: ;For each metasprite in METASPR_INDEX (0 to METASPR_NUM)
-	CPX METASPR_NUM
+	CPX #$FF
 	BEQ .forEachEnd
 	LDA METASPR_INDEX, x
 	ASL A
@@ -549,7 +549,8 @@ MetaSpr_Update:
 	ADC OAM_ADDR
 	STA OAM_ADDR ;no overflow check
 	
-	INX
+	LDA METASPR_NEXT, x
+	TAX
 	JMP .forEach
 .forEachEnd:
 	;Todo: fill unused metasprite OAM with $FE
