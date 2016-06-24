@@ -322,6 +322,23 @@ MainLoop:
 
  .bank 1
  .org $A000
+;***********************************
+;Blueprint for object structuring
+;todo: Software to generate anim/metaspr data
+Character_Main:
+	.dw CharMain_Anim
+	;.dw Player_Logic
+	
+CharMain_Anim:
+	.db 2
+	.dw .idle_up
+	;.dw .idle_down
+	;.dw .blink
+.idle_up:
+	.db 1 ;no. of frames
+	.db 16 ;frame duration
+	.db 4
+
 Umbrella_Up:
 	.db 3 * 4
 	.db 0, $10, $02, -12
@@ -432,7 +449,6 @@ Metasprite_Remove:
 .findPrevious:
 	TAY
 	LDA METASPR_NEXT, y
-	;TAY
 	CMP #$FF
 	BEQ .failure ;if next equals $FF then we reached end of list, failure
 	CMP TEMP
