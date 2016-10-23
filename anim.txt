@@ -1,0 +1,71 @@
+;Anim.txt
+;Animation tables
+
+;***********************************
+;***       Metasprite Data       ***
+;***********************************
+Metasprite_Table:
+	.dw _MS_Projectile_Default
+	.dw _MS_Umbrella_Up
+	.dw _MS_Umbrella_Down
+	.dw _MS_Chara_Up
+	.dw _MS_Chara_Up_Blink
+	.dw _MS_Chara_Down
+	.dw _MS_Chara_Down_Blink
+	.dw _MS_Chara_Hit_1
+	.dw _MS_Chara_Hit_2
+	
+_MS_Umbrella_Up:
+	.db 3 * 4
+	.db 0, $10, $02, -12
+	.db 0, $11, $02, -04
+	.db 0, $12, $02, 04
+_MS_Umbrella_Down:
+	.db 3 * 4
+	.db 0, $10, $83, -12
+	.db 0, $11, $83, -04
+	.db 0, $12, $83, 04
+_MS_Chara_Up:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $14, $02, 00
+_MS_Chara_Up_Blink:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $1a, $02, 00
+_MS_Chara_Down:
+	.db 2 * 4
+	.db 0, $13, $03, -8
+	.db 0, $15, $03, 00
+_MS_Chara_Down_Blink:
+	.db 2 * 4
+	.db 0, $13, $03, -8
+	.db 0, $19, $43, 00
+_MS_Chara_Hit_1:
+	.db 2 * 4
+	.db 0, $16, $02, -8
+	.db 0, $17, $02, 00
+_MS_Chara_Hit_2:
+	.db 2 * 4
+	.db 0, $17, $42, -8
+	.db 0, $16, $42, 00
+_MS_Projectile_Default:
+	.db 1 * 4
+	.db -4, $06, $02, -4
+
+;***********************************
+;*** A n i m a t i o n  D a t a  ***
+;***********************************
+	
+Animation_Table:
+	.dw _AN_Chara_Idle_Up
+	
+	
+;Entries should not be larger than 256
+_AN_Chara_Idle_Up:
+	.db 4 ;# of metasprites in animation
+	.db 255, 8, 8, 8 ;Time (frames) of each metasprite
+	.db 3, 4, 3, 4 ;List of metasprites used in animation
+	
+	
+	

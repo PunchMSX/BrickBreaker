@@ -11,9 +11,9 @@ RLE_BYTE	equ RLE_TAG+1
 ;1 - partial sequential write
 ;2 - clean pause
 RLE_STAT	equ RLE_BYTE+1
-RLE_COUNT	equ RLE_STAT+1
-RLE_STORE	equ RLE_COUNT+1
-RLE_MAX		equ RLE_STORE+1
+RLE_COUNT	equ RLE_STAT+1 ;# of bytes remaining
+RLE_STORE	equ RLE_COUNT+1 ;Register X backup for early exit
+RLE_MAX		equ RLE_STORE+1 ;User defined - Max # of bytes to be copied
 
 PPU_DATA = $2007
 RLE_MAXWRITES = 6

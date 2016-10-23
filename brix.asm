@@ -36,19 +36,25 @@ PPUCOUNT_ATT	.ds 1
 OFFSET_ATT		.ds 1
 
  .org $400
-METASPR_MAX		= 24
+METASPR_MAX		= 12
 METASPR_OAMADDR = $0220
 LIST_EMPTY	= $FF
 
 METASPR_NUM		.ds 1 ;Number of active metasprites
 METASPR_LEN		.ds 1 ;Temp var during metasprite update
 
+ .org $410
 METASPR_INDEX	.ds METASPR_MAX ;Linked list of sprite objects
 METASPR_NEXT	.ds METASPR_MAX ;and pointer to next sprite.
 
+ .org $420
 METASPR_FREE	.ds 1 ;first free slot
+ .org $430
 METASPR_FIRST	.ds 1 ;first occupied slot
+ .org $440
 METASPR_LAST	.ds 1 ;last occupied slot
+
+ .org $450
 METASPR_X		.ds METASPR_MAX
 METASPR_Y		.ds METASPR_MAX
 
@@ -309,7 +315,7 @@ MainLoop:
 	;INC $667
 .c
 	JSR Ctrl_Read
-	;JSR Ball_Update
+	JSR Ball_Update
 	JSR MetaSpr_Update
 	JSR DrawScanline
 	
