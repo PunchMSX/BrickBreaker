@@ -1,0 +1,56 @@
+;Collision.txt
+;Collision tables
+
+;***********************************
+;***  C O L L I S I O N  D A T A ***
+;***********************************
+
+;The table index for an object must be the same for metasprites and collision
+MS_Collision_Table:
+	.dw _COL_Projectile_Default
+	.dw _COL_Umbrella_Up
+	.dw _COL_Umbrella_Down
+	.dw _COL_Chara_Up
+	.dw _COL_Chara_Up_Blink
+	.dw _COL_Chara_Down
+	.dw _COL_Chara_Down_Blink
+	.dw _COL_Chara_Hit_1
+	.dw _COL_Chara_Hit_2
+	
+_COL_Umbrella_Up:
+	.db 3 * 4 ;Number of collision boxes
+	.db 0, $10, $02, -12 ;Col x1, x2, y1, y2
+	.db 0, $11, $02, -04
+	.db 0, $12, $02, 04
+_COL_Umbrella_Down:
+	.db 3 * 4
+	.db 0, $10, $83, -12
+	.db 0, $11, $83, -04
+	.db 0, $12, $83, 04
+_COL_Chara_Up:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $14, $02, 00
+_COL_Chara_Up_Blink:
+	.db 2 * 4
+	.db 0, $13, $02, -8
+	.db 0, $1a, $02, 00
+_COL_Chara_Down:
+	.db 2 * 4
+	.db 0, $13, $03, -8
+	.db 0, $15, $03, 00
+_COL_Chara_Down_Blink:
+	.db 2 * 4
+	.db 0, $13, $03, -8
+	.db 0, $19, $43, 00
+_COL_Chara_Hit_1:
+	.db 2 * 4
+	.db 0, $16, $02, -8
+	.db 0, $17, $02, 00
+_COL_Chara_Hit_2:
+	.db 2 * 4
+	.db 0, $17, $42, -8
+	.db 0, $16, $42, 00
+_COL_Projectile_Default:
+	.db 1 * 4
+	.db -4, $06, $02, -4

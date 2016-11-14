@@ -9,8 +9,8 @@
  .ZP
 RESERVED_RLE	.ds  16
 
-TEMP_PTR		.ds 6 ;Three pointers to be used at will by any subroutine
-TEMP_BYTE		.ds 6
+TEMP_PTR		.ds 12 ;Three pointers to be used at will by any subroutine
+TEMP_BYTE		.ds 12
 
  .BSS
  .org $200
@@ -433,6 +433,7 @@ LogicPtr = TEMP_PTR
 ;Updates OAM Copy with the metasprites. 
 ;No metasprite can have 0 bytes! (Use metasprite id # 255 to skip object)
 ObjectList_OAMUpload:
+
 Metasprite_Ptr = TEMP_PTR
 OAM_Offset = TEMP_BYTE
 OAM_Limit = TEMP_BYTE + 1
@@ -468,23 +469,10 @@ Metasprite_Y = TEMP_BYTE + 3
 	LDA OBJ_METASPRITE, x
 	CMP #$FF
 	BEQ .foundEnd
-	ASL A ;2-byte table index
-	TAY
-	BCS .second ;Slot 128 to 255 = index Y overflows
 	
-.first ;Entry 0 to 127 chosen
-	;Load pointer to object's metasprite
-	LDA Metasprite_Table, y
-	STA Metasprite_Ptr
-	LDA Metasprite_Table + 1, y
-	STA Metasprite_Ptr + 1
-	JMP .copyData
-.second ;Entry 128 to 255 chosen; add $100 to compensate overflow
-	LDA Metasprite_Table + $100, y
-	STA Metasprite_Ptr
-	LDA Metasprite_Table + $100 + 1, y
-	STA Metasprite_Ptr + 1
-	JMP .copyData
+	;Copies address from table to pointer
+	TZP16 Metasprite_Ptr, Metasprite_Table
+
 	
 .copyData:
 	LDY #0

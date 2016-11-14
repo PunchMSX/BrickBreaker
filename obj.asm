@@ -61,25 +61,10 @@ SpeedY = OBJ_INTSTATE2
 AnimateObject:
 FrameQ = TEMP_BYTE
 AnimPtr = TEMP_PTR
-	
+
 	TYA
-	ASL A
-	TAY ;Each pointer in table has two bytes
-	BCS .indexOverflow ;Index * 2 is be greater than 255
-	
-.indexOk ;Entry 0 to 127 chosen
-	;Store pointer to animation data in Zero Page
-	LDA Animation_Table, y
-	STA <AnimPtr
-	LDA Animation_Table + 1, y
-	STA <AnimPtr + 1
-	JMP .loadFrameQ
-	
-.indexOverflow ;Entry 128 to 255 chosen; add $100 to compensate overflow
-	LDA Animation_Table + $100, y
-	STA <AnimPtr
-	LDA Animation_Table + $100 + 1, y
-	STA <AnimPtr + 1
+	;Loads Animation pointer A from table into AnimPtr
+	TZP16 AnimPtr, Animation_Table
 	
 .loadFrameQ
 	LDY #0
