@@ -20,7 +20,8 @@ _OBJ_Player:
 	INC OBJ_XPOS, x
 	
 .animate
-	LDY #0
+	JSR AnimTimer_Tick
+	LDY #0 ;Animation index #. (0 = _AN_Chara_Idle_Up)
 	JSR AnimateObject
 	
 	RTS
@@ -52,7 +53,6 @@ SpeedY = OBJ_INTSTATE2
 .animate
 	LDA #0
 	STA OBJ_METASPRITE, x
-	
 	RTS
 	
 ;X = Object Slot #
@@ -65,31 +65,54 @@ AnimPtr = TEMP_PTR
 	TYA
 	ASL A
 	TAY ;Each pointer in table has two bytes
+	BCS .indexOverflow ;Index * 2 is be greater than 255
 	
+.indexOk ;Entry 0 to 127 chosen
 	;Store pointer to animation data in Zero Page
 	LDA Animation_Table, y
 	STA <AnimPtr
 	LDA Animation_Table + 1, y
 	STA <AnimPtr + 1
+	JMP .loadFrameQ
 	
+.indexOverflow ;Entry 128 to 255 chosen; add $100 to compensate overflow
+	LDA Animation_Table + $100, y
+	STA <AnimPtr
+	LDA Animation_Table + $100 + 1, y
+	STA <AnimPtr + 1
+	
+.loadFrameQ
 	LDY #0
 	;Load animation data from pointer
 	LDA [AnimPtr], y
 	STA <FrameQ ;# of metasprite frames
 
 	INC16 AnimPtr
+;Decides if current frame is maintained or there's a transition to next one
+;OBJ_ANIMFRAME *MUST* start at 0 and only this subroutine can manipulate it,
+;   because frame # wraparound ( > FrameQ) is only checked when transitioning!
+	LDY OBJ_ANIMFRAME, x
 .getCurFrame
 	LDA [AnimPtr], y
-	CMP OBJ_ANIMTIMER, x
-	BCS .got
+	CMP OBJ_ANIMTIMER, x ;Is Timer limit >= Timer?
+	BCC .transition ;Timer exceeds or is equal to limit, set next frame.
+	BEQ .transition
+	JMP .updateMetasprite ;Timer doesn't exceed limit, keep current frame #.
+	
+.transition:
 	INY
 	CPY <FrameQ
-	BNE .getCurFrame
-	LDA #$FF
-	STA OBJ_METASPRITE, x ;Error in timer or animation table entry
-	RTS
-.got
+	BCC .transition2 ;No overflow
+	LDY #0 ;Overflow = wraparound to zero
+.transition2
 	TYA
+	STA OBJ_ANIMFRAME, x ;Store updated frame #.
+	
+	LDA #0
+	STA OBJ_ANIMTIMER, x ;Clear timer.
+
+.updateMetasprite:
+	TYA ;Y = frame #.
 	CLC
 	ADC <FrameQ
 	TAY
@@ -97,3 +120,12 @@ AnimPtr = TEMP_PTR
 	STA OBJ_METASPRITE, x ;Error in timer or animation table entry
 	RTS
 	
+;X = Object Slot #
+;Timer stops at 255 (no overflow)
+AnimTimer_Tick:
+	INC OBJ_ANIMTIMER, x
+	BEQ .overflow
+	RTS
+.overflow
+	DEC OBJ_ANIMTIMER, x
+	RTS

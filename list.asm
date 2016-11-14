@@ -41,10 +41,16 @@ PPU_DRAW .ds 1
 OBJ_MAX = 16
 
 OBJ_LIST		.ds OBJ_MAX
+	;List of objects. Value = object type (each type has own update subroutine)
 OBJ_XPOS		.ds OBJ_MAX
 OBJ_YPOS		.ds OBJ_MAX
+	;Position of center of object on screen
 OBJ_ANIMTIMER	.ds OBJ_MAX
+	;Frame timer (0-255). Timer limit is defined by animation table.
+OBJ_ANIMFRAME	.ds OBJ_MAX
+	;Current animation frame. Don't manually write values other than 0.
 OBJ_METASPRITE	.ds OBJ_MAX
+	;Object's metasprite index #. 255 = no draw
 OBJ_INTSTATE1	.ds OBJ_MAX
 OBJ_INTSTATE2	.ds OBJ_MAX
 OBJ_INTSTATE3	.ds OBJ_MAX
@@ -381,6 +387,7 @@ ObjectList_Insert:
 	STA OBJ_LIST, x ;Object ID
 	LDA #0
 	STA OBJ_ANIMTIMER, x ;Clears animation timer
+	STA OBJ_ANIMFRAME, x ;Sets current animation frame to 0.
 	STA OBJ_METASPRITE, x
 	TXA
 	RTS ;End!
