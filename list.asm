@@ -19,6 +19,7 @@ OAM_SPROFFSET = 4 * 4
  
  .org $300
 CPU_NEXTFRAME	.ds 1
+PPU_NEXTFRAME	.ds 1
 NEXTFRAME_YES 	= 0
 NEXTFRAME_NO	= 1
 
@@ -51,6 +52,8 @@ OBJ_ANIMFRAME	.ds OBJ_MAX
 	;Current animation frame. Don't manually write values other than 0.
 OBJ_METASPRITE	.ds OBJ_MAX
 	;Object's metasprite index #. 255 = no draw
+OBJ_COLLISION	.ds OBJ_MAX
+	;Collided with who? 255 = no collision
 OBJ_INTSTATE1	.ds OBJ_MAX
 OBJ_INTSTATE2	.ds OBJ_MAX
 OBJ_INTSTATE3	.ds OBJ_MAX
@@ -59,11 +62,12 @@ OBJ_INTSTATE3	.ds OBJ_MAX
  .code
  .bank 0
  .org $8000
-
+	.include "macros.asm"
+	.include "collision.asm"
+	.include "collision.txt"
 
  .bank 1
  .org $A000
-	.include "macros.asm"
 	.include "lib/rle.asm"
 	.include "obj.asm"
 	
@@ -273,14 +277,20 @@ RESET:
 Mainloop:
 	LDA #NEXTFRAME_NO
 	STA CPU_NEXTFRAME
-	JSR Ctrl_Read
-	JSR ObjectList_UpdateAll
-	JSR ObjectList_OAMUpload
-	JSR DrawScanline
+	
+		JSR Ctrl_Read
+		JSR ObjectList_UpdateAll
+		JSR ObjectList_OAMUpload
+		JSR DrawScanline
+	
+	LDA #NEXTFRAME_YES
+	STA CPU_NEXTFRAME
 .waitPPU
-	LDA CPU_NEXTFRAME
+	LDA PPU_NEXTFRAME
 	CMP #NEXTFRAME_NO
 	BEQ .waitPPU
+	LDA #NEXTFRAME_NO
+	STA PPU_NEXTFRAME
 	JMP Mainloop
 	
 NMI:
@@ -290,6 +300,10 @@ NMI:
 	TYA
 	PHA
 	PHP;Save Processor Status
+	
+	LDA CPU_NEXTFRAME
+	CMP #NEXTFRAME_NO
+	BEQ .cleanup
 	
 	LDA #0
 	STA $2003
@@ -332,7 +346,7 @@ NMI:
 	STA $2005 ;set scroll to (0,0)
 	
 	LDA #NEXTFRAME_YES
-	STA CPU_NEXTFRAME
+	STA PPU_NEXTFRAME
 	
 	PLP
 	PLA

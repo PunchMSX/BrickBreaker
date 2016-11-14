@@ -1,4 +1,30 @@
 
+Overlap_Test_All:
+	LDY #255
+	TYA
+	STA OBJ_COLLISION, x
+.loop:
+	INY
+	CPY #OBJ_MAX
+	BEQ .end
+	LDA OBJ_LIST, x
+	CMP #$FF
+	BNE .found
+	JMP .loop
+.found
+	PHX
+	PHY
+	JSR Overlap_Test
+	PLY
+	PLX
+	LDA Overlap1
+	CMP #$FF
+	BEQ .loop
+	TYA
+	STA OBJ_COLLISION, x
+.end
+	RTS
+
 ;X = main object
 ;Y = secondary object
 ;Tests overlap between two metasprites' Axis Aligned bounding boxes
@@ -84,7 +110,7 @@ Obj2Box = TEMP_BYTE + 6;4 bytes
 	TXA
 	TAY
 	;X = Obj1 Index
-	LDX Obj1Id1
+	LDX Obj1Id
 .test1 ;Obj.x1 > Obj.x2
 	LDA [OBJ1_PTR], y
 	CLC
@@ -152,7 +178,7 @@ Obj2Box = TEMP_BYTE + 6;4 bytes
 	
 	CPY Obj2Q ;Have we checked against all boxes Obj2 has?
 		;No, test next box.
-		BCC .forEachBoxPair
+		BCC .nextbox
 		
 		;Yes, check next Obj1 box against all Obj2 boxes.
 		TXA
@@ -162,7 +188,7 @@ Obj2Box = TEMP_BYTE + 6;4 bytes
 		
 		CMP Obj1Q ;Have we checked EVERY BOX in Obj1?
 			;No. Go ahead with checks.
-			BCC .forEachPair
+			BCC .nextbox
 			
 			;Yes. No collision found between Obj1 and Obj2.
 			LDX #255
@@ -171,4 +197,7 @@ Obj2Box = TEMP_BYTE + 6;4 bytes
 			STY Overlap2 ;255 = no overlap
 			
 			RTS ;End
+	
+.nextbox
+	JMP .forEachBoxPair
 	

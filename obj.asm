@@ -53,6 +53,11 @@ SpeedY = OBJ_INTSTATE2
 .animate
 	LDA #0
 	STA OBJ_METASPRITE, x
+	
+.coldet
+	LDA #255
+	STA OBJ_COLLISION, x
+	JSR Overlap_Test_All
 	RTS
 	
 ;X = Object Slot #
