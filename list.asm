@@ -46,6 +46,8 @@ OBJ_LIST		.ds OBJ_MAX
 OBJ_XPOS		.ds OBJ_MAX
 OBJ_YPOS		.ds OBJ_MAX
 	;Position of center of object on screen
+OBJ_ANIMATION	.ds OBJ_MAX
+	;Animation ID #
 OBJ_ANIMTIMER	.ds OBJ_MAX
 	;Frame timer (0-255). Timer limit is defined by animation table.
 OBJ_ANIMFRAME	.ds OBJ_MAX
@@ -186,18 +188,8 @@ RESET:
 	
 	JSR ObjectList_Init	;Run this only once
 	
-	LDX #100
-	LDY #200
-	LDA #0
-	JSR ObjectList_Insert ;Main Character
-	
-	LDX #130
-	LDY #180
-	LDA #0
-	JSR ObjectList_Insert ;Main Character
-	
-	LDX #160
-	LDY #190
+	LDX #$80
+	LDY #$88
 	LDA #0
 	JSR ObjectList_Insert ;Main Character
 	
@@ -259,11 +251,6 @@ RESET:
 	LDX #0
 	LDY #0
 	LDA #1
-	JSR ObjectList_Insert ;Ball
-	
-	LDX #23
-	LDY #55
-	LDA #0
 	JSR ObjectList_Insert ;Ball
 	
 	LDX #16

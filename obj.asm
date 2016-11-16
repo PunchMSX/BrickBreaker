@@ -16,12 +16,29 @@ _OBJ_Player:
 .r
 	LDA CTRLPORT_1
 	AND #%00000001
-	BEQ .animate
+	BEQ .u
 	INC OBJ_XPOS, x
+.u
+	LDA CTRLPORT_1
+	AND #%00000100
+	BEQ .d
+	DEC OBJ_YPOS, x
+.d
+	LDA CTRLPORT_1
+	AND #%00001000
+	BEQ .coldet
+	INC OBJ_YPOS, x
 	
+.coldet
+	JSR Overlap_Test_All
+	LDA OBJ_COLLISION, x
+	CMP #$FF
+	BEQ .animate
+	
+	LDY #1
+	JSR ChangeAnimation
 .animate
 	JSR AnimTimer_Tick
-	LDY #0 ;Animation index #. (0 = _AN_Chara_Idle_Up)
 	JSR AnimateObject
 	
 	RTS
@@ -31,12 +48,12 @@ SpeedX = OBJ_INTSTATE1
 SpeedY = OBJ_INTSTATE2
 	LDA SpeedX, x
 	BNE .aa
-	LDA #2
+	LDA #0
 	STA SpeedX, x
 .aa
 	LDA SpeedY, x
 	BNE .moveh
-	LDA #2
+	LDA #0
 	STA SpeedY, x
 	
 .moveh
@@ -57,17 +74,27 @@ SpeedY = OBJ_INTSTATE2
 .coldet
 	LDA #255
 	STA OBJ_COLLISION, x
-	JSR Overlap_Test_All
 	RTS
 	
 ;X = Object Slot #
-;Y = Animation id #
+;Y = new Animation id #
+;Call this to change the animation id without causing bugs.
+ChangeAnimation:
+	LDA #0
+	STA OBJ_ANIMTIMER, x
+	STA OBJ_ANIMFRAME, x
+	
+	TYA
+	STA OBJ_ANIMATION, x
+	
+	RTS
+	
+;X = Object Slot #
 ;This loads the correct Metasprite id for the current animation state.
 AnimateObject:
 FrameQ = TEMP_BYTE
 AnimPtr = TEMP_PTR
-
-	TYA
+	LDA OBJ_ANIMATION, x
 	;Loads Animation pointer A from table into AnimPtr
 	TZP16 AnimPtr, Animation_Table
 	

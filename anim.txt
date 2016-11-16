@@ -59,13 +59,18 @@ _MS_Projectile_Default:
 	
 Animation_Table:
 	.dw _AN_Chara_Idle_Up
-	
+	.dw _AN_Chara_Hit
 	
 ;Entries should not be larger than 256
 _AN_Chara_Idle_Up:
 	.db 4 ;# of metasprites in animation
 	.db 255, 8, 8, 8 ;Time (frames) of each metasprite
 	.db 3, 4, 3, 4 ;List of metasprites used in animation
+	
+_AN_Chara_Hit:
+	.db 2 ;# of metasprites in animation
+	.db 5, 5 ;Time (frames) of each metasprite
+	.db 7, 8;List of metasprites used in animation
 	
 	
 	
