@@ -48,12 +48,12 @@ SpeedX = OBJ_INTSTATE1
 SpeedY = OBJ_INTSTATE2
 	LDA SpeedX, x
 	BNE .aa
-	LDA #0
+	LDA #2
 	STA SpeedX, x
 .aa
 	LDA SpeedY, x
 	BNE .moveh
-	LDA #0
+	LDA #3
 	STA SpeedY, x
 	
 .moveh

@@ -58,13 +58,16 @@ Overlap_Test_1Box:
 	STA <Obj2Box
 	
 	
-.Test1: ;Obj1.y1 > Obj2.y2
+;Must pass all 4 tests to be overlapping.
+.Test1: ;Obj2.y2 > Obj1.y1
+	CLC
 	LDY <Obj1Box
 	LDX <Obj1Id
 	LDA MS_Collision_Table + 2, y
 	ADC OBJ_YPOS, x
 	STA <TempPos
 	
+	CLC
 	LDY <Obj2Box
 	LDX <Obj2Id
 	LDA MS_Collision_Table + 3, y
@@ -72,48 +75,54 @@ Overlap_Test_1Box:
 	CMP <TempPos
 	
 	
-	BCS .Test2 ;Test false, move to next one.
+	BCS .Test2 ;Test true, move to next one.
 	JMP .noOverlap
 	
-.Test2: ;Obj1.y2 < Obj2.y1
+.Test2: ;Obj1.y2 > Obj2.y1
+	CLC
 	LDY <Obj2Box
 	LDX <Obj2Id
 	LDA MS_Collision_Table + 2, y
 	ADC OBJ_YPOS, x
 	STA <TempPos
 	
+	CLC
 	LDY <Obj1Box
 	LDX <Obj1Id
 	LDA MS_Collision_Table + 3, y
 	ADC OBJ_YPOS, x
 	CMP <TempPos
 	
-	BCS .Test3 ;Test false, move to next one.
+	BCS .Test3 ;Test true, move to next one.
 	JMP .noOverlap
 	
-.Test3: ;Obj1.x1 > Obj2.x2
+.Test3: ;Obj2.x2 > Obj1.x1
+	CLC
 	LDY <Obj1Box
 	LDX <Obj1Id
 	LDA MS_Collision_Table, y
 	ADC OBJ_XPOS, x
 	STA <TempPos
 	
+	CLC
 	LDY <Obj2Box
 	LDX <Obj2Id
 	LDA MS_Collision_Table + 1, y
 	ADC OBJ_XPOS, x
 	CMP <TempPos
 	
-	BCS .Test4 ;Test false, move to next one.
+	BCS .Test4 ;Test true, move to next one.
 	JMP .noOverlap
 	
-.Test4: ;Obj1.x2 < Obj2.x1
+.Test4: ;Obj1.x2 > Obj2.x1
+	CLC
 	LDY <Obj2Box
 	LDX <Obj2Id
 	LDA MS_Collision_Table, y
 	ADC OBJ_XPOS, x
-	CMP <TempPos
+	STA <TempPos
 	
+	CLC
 	LDY <Obj1Box
 	LDX <Obj1Id
 	LDA MS_Collision_Table + 1, y
