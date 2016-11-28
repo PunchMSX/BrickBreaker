@@ -8,7 +8,7 @@
 ;The table index for an object must be the same for metasprites and collision
 MS_Collision_Table:
 _COL_Projectile_Default:
-	.db -4,  4,  -4,  4
+	.db -3,  3,  -3,  3
 _COL_Umbrella_Up:
 	.db -12, 12,  0,  8 ;Col x1, x2, y1, y2
 _COL_Umbrella_Down:
@@ -25,4 +25,8 @@ _COL_Chara_Hit_1:
 	.db -8,   8,  0,  8
 _COL_Chara_Hit_2:
 	.db -8,   8,  0,  8
+_COL_Intro_Umbrella_Hit:
+	.db -12, 12,  0,  8 
+_COL_Intro_Umbrella_Ok:
+	.db -6, 6,  0,  8
 	

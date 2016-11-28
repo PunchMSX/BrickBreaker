@@ -62,4 +62,51 @@
  .exit\@:
 	.endm
  
+;Does RTS trick to perform an indirect JSR to table address
+;JSI(TableAddr, A(Index))
+ .macro JSI
+  .if (\# != 1)
+	.fail
+  .endif
+  
+	JMP .exit\@
+	
+;****** Indirect JSR Loader ******
+ .Indirect_JSR_l\@:
+	;LDA Index
+	LDA \1 + 1, y ;High byte popped last, pushed first.
+	PHA
+	LDA \1, y
+	PHA ;Pushes Subroutine address into stack
+	RTS ;Jumps to target subroutine, returns to "JSR" callee
+ .Indirect_JSR_h\@: ;Index is > 128, compensate overflow when multiplying by 2.
+	;LDA Index
+	LDA \1 + $100 + 1, y
+	PHA
+	LDA \1 + $100, y
+	PHA 
+	RTS 
+;**********************************	
+	
+ .exit\@:
+	ASL A
+	TAY
+	BCS .sec\@
+	JSR .Indirect_JSR_l\@
+	JMP .end\@
+ .sec\@:
+	JSR .Indirect_JSR_h\@
+ .end\@:
+	.endm
  
+;Ticks timer up to 255, doesn't overflow
+;JSI(TimerAddr)
+ .macro TCK
+	INC \1
+	BEQ .overflow\@
+	JMP .end\@
+ .overflow\@:
+	DEC \1
+ .end\@:
+	.endm
+	

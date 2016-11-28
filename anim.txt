@@ -14,7 +14,12 @@ Metasprite_Table:
 	.dw _MS_Chara_Down_Blink
 	.dw _MS_Chara_Hit_1
 	.dw _MS_Chara_Hit_2
+	.dw _MS_Intro_Umbrella_Hit
+	.dw _MS_Intro_Umbrella_Ok
 	
+_MS_Projectile_Default:
+	.db 1 * 4
+	.db -4, $06, $02, -4	
 _MS_Umbrella_Up:
 	.db 3 * 4
 	.db 0, $10, $02, -12
@@ -49,9 +54,18 @@ _MS_Chara_Hit_2:
 	.db 2 * 4
 	.db 0, $17, $42, -8
 	.db 0, $16, $42, 00
-_MS_Projectile_Default:
-	.db 1 * 4
-	.db -4, $06, $02, -4
+_MS_Intro_Umbrella_Hit:
+	.db 4 * 4
+	.db 0, $1B, $02, -12
+	.db 0, $1C, $02, -04
+	.db 0, $1D, $02, 04
+	.db 8, $1E, $02, -04
+_MS_Intro_Umbrella_Ok:
+	.db 4 * 4
+	.db 0, $10, $02, -12
+	.db 0, $11, $02, -04
+	.db 0, $12, $02, 04
+	.db 8, $1E, $02, -04
 	
 ;***********************************
 ;*** A n i m a t i o n  D a t a  ***

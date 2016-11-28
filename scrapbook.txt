@@ -1,0 +1,20 @@
+Scrapbook and Changelog
+
+-The collision detection routine behaves "strangely" but that might be caused by the object update order. Ideally this would be solved by running the projectiles first, then running the objects that check collisions against them (the main character's parasol). The "strange" behaviour is 1-frame delay that sometimes happen between a hit and its reaction.
+
+-Collision is also off by one on edge checks (being side by side, 1px distance triggers overlap. This shouldn't happen)
+
+-I need to remember to tighten the collision boxes, the current values have empty space in them which feels odd. The parasol's collision detection might need a special collision routine though.
+
+**Investigate collision routine**
+
+Changelog:
+
+28/11
++Code restructuring
++Random Number Generation
++Collision Detection Fix
++New objects
++Framework for game states
++Title screen partially done
++And more

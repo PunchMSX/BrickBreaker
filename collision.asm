@@ -6,6 +6,7 @@ Obj2Id = TEMP_BYTE + 4
 Obj1Box = TEMP_BYTE + 5
 Obj2Box = TEMP_BYTE + 6
 TempPos = TEMP_BYTE + 7
+ColGroup = TEMP_BYTE + 8
 
 OVERLAP_TRUE = 1
 OVERLAP_FALSE = 0
@@ -18,11 +19,38 @@ Overlap_Test_All:
 	INY
 	CPY #OBJ_MAX
 	BEQ .end
-	LDA OBJ_LIST, x
+	LDA OBJ_LIST, y
 	CMP #$FF
 	BNE .found
 	JMP .loop
 .found
+	JSR Overlap_Test_1Box
+	CMP #OVERLAP_FALSE
+	BEQ .loop
+	
+	TYA
+	STA OBJ_COLLISION, x
+.end
+	RTS
+	
+;X - object to test
+;Y - group ID to test against
+Overlap_Test_Group:
+	STY <ColGroup
+	LDY #255
+	TYA
+	STA OBJ_COLLISION, x
+.loop:
+	INY
+	CPY #OBJ_MAX
+	BEQ .end
+	LDA OBJ_LIST, y
+	CMP #$FF
+	BNE .found
+	JMP .loop
+.found
+	CMP <ColGroup
+	BNE .loop
 	JSR Overlap_Test_1Box
 	CMP #OVERLAP_FALSE
 	BEQ .loop
