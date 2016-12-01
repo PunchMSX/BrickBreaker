@@ -9,6 +9,9 @@
 	.ineschr 1 ;8kb Character ROM
 	.inesprg 2 ;32kb Program ROM
 	
+TRUE = 1
+FALSE = 0
+
  .ZP
 RESERVED_RLE	.ds  8
 
@@ -16,6 +19,24 @@ RNG_SEED		.ds 1
 
 TEMP_PTR		.ds 12 ;Three pointers to be used at will by any subroutine
 TEMP_BYTE		.ds 12
+
+
+;Finite state machine interpreter (state.asm)
+INTERPRETER_PC	.ds 2 ;Pointer to current instruction 
+INTERPRETER_OPC	.ds 1 ;Last opcode loaded
+INTERPRETER_STEP .ds 1 ;Toggle to run INTERPRETER_OPC or opcode pointed by the program counter
+
+INTERPRETER_PPU	.ds 2 ;Pointer to PPU RAM
+INTERPRETER_CPU	.ds 2 ;Pointer to CPU RAM
+
+INT_SP1	.ds 1 ;Offset to top (next empty slot) of interpreter stack 1 (64 bytes)
+INTERPRETER_STACK = $0100
+INTERPRETER_STACK_MAX = 64
+
+INT_R1	.ds 1 ;Register #1 always gets set to 0 on each interpreter step
+INT_R2	.ds 1
+INT_R3	.ds 1
+INT_R4	.ds 1
 
  .BSS
  .org $200
@@ -42,6 +63,9 @@ CPUADDR_NAM .ds 2 ;Address in PPU memory for the Background/Attributes
 CPUADDR_ATR .ds 2
 
 PPU_DRAW .ds 1
+PPU_NODRAW	= 0
+PPU_RLEDRAW = 1
+PPU_RLEATRDRAW = 2
 
  .org $400
 OBJ_MAX = 16
@@ -85,7 +109,6 @@ INTRO_CHARQ		.ds 1
 INTRO_TIMER		.ds 1
 INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro in frame intervals.
 
-
  .code
  .bank 0
  .org $8000
@@ -100,6 +123,8 @@ INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro in frame intervals.
 	.include "collision.txt"
 	
 	.include "titlescr.asm"
+	
+	.include "state.asm"
 
  .bank 1
  .org $A000
@@ -216,6 +241,9 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
+	LDA #4
+	STA RLE_MAX
+	
 	JSR ObjectList_Init	;Run this only once
 	
 	JSR TitleInit
@@ -262,10 +290,8 @@ NMI:
 	STA $4014 ;Copy OAM Table
 	
 	LDA PPU_DRAW
-	BEQ .cleanup
-	
-	LDA #24
-	STA RLE_MAX
+	CMP #PPU_RLEDRAW
+	BNE .cleanup
 	
 	LDA $2002
 	LDA PPUADDR_NAM
@@ -280,13 +306,13 @@ NMI:
 	LDA RLE_STAT
 	CMP #RLE_READY
 	BNE .updatePPUaddress
-	LDA #0
+	LDA #PPU_NODRAW
 	STA PPU_DRAW ;Drawing finished.
 	
 .updatePPUaddress
 	LDA PPUADDR_NAM + 1
 	CLC
-	ADC #24
+	ADC RLE_MAX
 	STA PPUADDR_NAM + 1
 	BCC .cleanup
 	INC PPUADDR_NAM
@@ -314,10 +340,16 @@ Main_Palette:
 	.incbin "art/bg.pal"
 	.incbin "art/sprite.pal"
 	
-Text_1:
+Text_ProgBy:
 	.db 1
-	.db " PROGRAMMED BY ALEFF CORREA"
+	.db "PROGRAMMED BY ALEFF CORREA"
 	.db 1, 0
+	
+Text_PushRun:
+	.db 1
+	.db "PRESS START BUTTON"
+	.db 1, 0
+	
 bg_Title_Screen:
 	.incbin "art/title.rle"
 	

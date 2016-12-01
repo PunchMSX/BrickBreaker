@@ -1,7 +1,6 @@
 ;Macross.asm
 ;Macro definitions
 
-;Destroys A registre
  .macro INC16
  .if (\# > 1)
 	.fail
@@ -9,6 +8,17 @@
 	INC \1
 	BNE .exit\@
 	INC \1 + 1
+ .exit\@:
+	.endm 
+	
+ .macro DEC16
+ .if (\# > 1)
+	.fail
+ .endif
+	DEC \1
+	CMP #$FF
+	BNE .exit\@
+	DEC \1 + 1
  .exit\@:
 	.endm 
 	

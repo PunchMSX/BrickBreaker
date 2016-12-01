@@ -5,6 +5,47 @@ INTRO_MAXBULLETS = 8
 INTRO_MAXCHARS = 2
 INTRO_SPAWNTIME = 25 ;1/2s NTSC
 	
+Intro_StateMachine:
+	.db OPC_ScheduleDraw
+	.dw bg_Title_Screen, $2000
+	.db OPC_DrawRLE
+	
+	.db OPC_Delay, 50
+	
+	.db OPC_ScheduleDraw
+	.dw Text_ProgBy, $2043
+	.db OPC_ScheduleDraw
+	.dw Text_PushRun, $236C
+	.db OPC_DrawRLE
+	.db OPC_DrawRLE
+	
+	.db OPC_Halt
+	
+TitleInit:
+	LDA #0
+	STA INTRO_BULLETQ
+	STA INTRO_CHARQ
+	STA INTRO_TIMER
+
+	LDX #LOW(Intro_StateMachine)
+	LDY #HIGH(Intro_StateMachine)
+	JSR State_Interpreter_Init
+
+	RTS
+
+TitleLoop:
+	TCK INTRO_SPAWN_TMR
+	TCK INTRO_SPAWN_TMR + 1
+	
+	JSR Intro_SpawnBullets
+	JSR Intro_SpawnChars
+	
+	JSR State_Interpreter
+	
+	RTS
+	
+;*****************************************************************
+	
 Intro_SpawnBullets:
 	LDA INTRO_BULLETQ
 	CMP #INTRO_MAXBULLETS
@@ -52,34 +93,3 @@ Intro_SpawnChars:
 	INC INTRO_CHARQ
 .end
 	RTS
-	
-TitleInit:
-	LDA #0
-	STA INTRO_BULLETQ
-	STA INTRO_CHARQ
-	STA INTRO_TIMER
-
-	
-	LDA #LOW(bg_Title_Screen)
-	STA CPUADDR_NAM
-	LDA #HIGH(bg_Title_Screen)
-	STA CPUADDR_NAM + 1
-	LDA #$20
-	STA PPUADDR_NAM
-	LDA #$00
-	STA PPUADDR_NAM + 1
-	
-	LDA #1
-	STA PPU_DRAW ;Schedule "Text1" to be drawn next NMI
-	
-	RTS
-
-TitleLoop:
-	TCK INTRO_SPAWN_TMR
-	TCK INTRO_SPAWN_TMR + 1
-	
-	JSR Intro_SpawnBullets
-	JSR Intro_SpawnChars
-	
-	RTS
-	

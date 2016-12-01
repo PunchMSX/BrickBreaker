@@ -16,7 +16,6 @@ RLE_STORE	equ RLE_COUNT+1 ;Register X backup for early exit
 RLE_MAX		equ RLE_STORE+1 ;User defined - Max # of bytes to be copied
 
 PPU_DATA = $2007
-RLE_MAXWRITES = 6
 
 RLE_READY = 0
 RLE_UNCLEAN = 1
