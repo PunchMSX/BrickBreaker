@@ -19,6 +19,39 @@ Intro_StateMachine:
 	.db OPC_DrawRLE
 	.db OPC_DrawRLE
 	
+	.db OPC_Delay, 1
+	
+	.db OPC_DrawRepeatTiles, $0E, 4, TRUE
+	.dw $2210
+	.db OPC_DrawRepeatTiles, $0E, 4, TRUE
+	.dw $2211
+	
+	.db OPC_DrawRepeatTiles, $0E, 6, TRUE
+	.dw $21D2
+	.db OPC_DrawRepeatTiles, $0E, 6, TRUE
+	.dw $21D3
+	
+	.db OPC_DrawRepeatTiles, $0E, 4, FALSE
+	.dw $21CE
+	.db OPC_DrawRepeatTiles, $0E, 4, FALSE
+	.dw $21EE
+	
+	.db OPC_DrawRepeatTiles, $0E, 6, TRUE
+	.dw $220E
+	.db OPC_DrawRepeatTiles, $0E, 6, TRUE
+	.dw $220F
+	
+	.db OPC_DrawRepeatTiles, $0E, 6, FALSE
+	.dw $2290
+	.db OPC_DrawRepeatTiles, $0E, 6, FALSE
+	.dw $22B0
+	
+	.db OPC_DrawRepeatTiles, $0E, 8, TRUE
+	.dw $2194
+	.db OPC_DrawRepeatTiles, $0E, 8, TRUE
+	.dw $2195
+	
+	
 	.db OPC_Halt
 	
 TitleInit:

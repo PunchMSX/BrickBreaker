@@ -9,6 +9,7 @@ State_Table:
 	.dw _OPC_Delay - 1
 	.dw _OPC_ScheduleDraw - 1
 	.dw _OPC_DrawRLE - 1
+	.dw _OPC_DrawRepeatTiles - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -17,8 +18,9 @@ OPC_Error = 1
 OPC_Delay = 2
 OPC_ScheduleDraw = 3
 OPC_DrawRLE = 4
+OPC_DrawRepeatTiles = 5
 	
-OPC_Invalid = OPC_DrawRLE + 1
+OPC_Invalid = OPC_DrawRepeatTiles + 1
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -177,6 +179,91 @@ RLE_MAXBYTES = 24
 .end
 	RTS
 	
+;Set a PPU RLE write to be done during VBlank (NMI interrupt)
+;Arguments: 5 bytes (Tile #, Length, IsHorizontal, PPUAddr)
+_OPC_DrawRepeatTiles:
+	LDA <INT_R1
+	BNE .waitNMI
+.1stTimeSetup:
+	LPC
+	STA <INT_R2 ;Tile #
+	LPC
+	STA <INT_R3 ;Length
+	
+	LPC
+	STA <INT_R4 ;IsHoriz
+	
+	LPC
+	STA <INT_16R1
+	LPC
+	STA <INT_16R1 + 1 ;Pointer to PPU
+
+	INC <INT_R1
+	
+.waitNMI
+	LDA PPU_DRAW
+	CMP #PPU_NODRAW
+	BNE .end
+	
+	LDA <INT_R3
+	CMP #0
+	BNE .write
+	;If R3 (length) = 0, no more stuff to write, step to next opcode.
+	JSR Interpreter_AllowStep
+	RTS
+	
+.write
+	;Ready to draw new tiles, draw remaining
+	LDA <INT_R4
+	STA PPU_HORIZ
+	
+	LDA <INT_16R1 + 1
+	STA PPUADDR_NAM
+	LDA <INT_16R1
+	STA PPUADDR_NAM + 1
+	
+	LDA <INT_R3
+	CMP #RLE_MAXBYTES
+	BCS .WriteMax
+	JMP .WriteRemaining
+	
+.WriteMax ;Writes a run of bytes.
+	LDA #RLE_MAXBYTES
+	STA PPU_LENGTH
+	LDA <INT_R2
+	STA PPU_BYTE
+	
+	LDA #PPU_BYTEDRAW
+	STA PPU_DRAW
+	
+	CLC
+	LDA #RLE_MAXBYTES
+	ADC <INT_16R1
+	STA <INT_16R1
+	BCC .addEnd
+	INC <INT_16R1 + 1 ;Increases PPU address by # of bytes written
+.addEnd
+
+	SEC
+	LDA <INT_R3
+	SBC #RLE_MAXBYTES
+	STA <INT_R3 ;Also subtracts length so we can keep track of how many bytes are left.
+	JMP .end
+	
+.WriteRemaining ;Last writing run
+	LDA <INT_R3
+	STA PPU_LENGTH
+	LDA <INT_R2
+	STA PPU_BYTE
+	
+	LDA #PPU_BYTEDRAW
+	STA PPU_DRAW
+	
+	LDA #0
+	STA <INT_R3
+.end
+	RTS
+	
 	
 Interpreter_AllowStep:
 	LDA #TRUE
@@ -211,7 +298,8 @@ Interpreter_Push:
 .StackOverflow:
 	RTS
 	
-;A = value on top of stack
+;Output: A = value on top of stack
+;Stack pointer is decreased (the top is "removed")
 Interpreter_Pop:
 	LDY <INT_SP1
 	BEQ .StackUnderflow ;Stack empty (ie next empty position = 0)
@@ -219,6 +307,18 @@ Interpreter_Pop:
 	DEC <INT_SP1
 	DEY
 	LDA INTERPRETER_STACK, y
+	
+.StackUnderflow:
+	RTS
+	
+;Output: A = value on top of stack
+;No changes to the stack are done.
+Interpreter_Peek:
+	LDY <INT_SP1
+	BEQ .StackUnderflow ;Stack empty, no value to peek at.
+	
+	DEY
+	LDA INTERPRETER_STACK, y ;Loads top of stack into A
 	
 .StackUnderflow:
 	RTS

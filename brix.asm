@@ -33,10 +33,11 @@ INT_SP1	.ds 1 ;Offset to top (next empty slot) of interpreter stack 1 (64 bytes)
 INTERPRETER_STACK = $0100
 INTERPRETER_STACK_MAX = 64
 
-INT_R1	.ds 1 ;Register #1 always gets set to 0 on each interpreter step
-INT_R2	.ds 1
-INT_R3	.ds 1
-INT_R4	.ds 1
+INT_R1		.ds 1 ;Register #1 always gets set to 0 on each interpreter step
+INT_R2		.ds 1
+INT_R3		.ds 1
+INT_R4		.ds 1
+INT_16R1 	.ds 2 ;16 bit register
 
  .BSS
  .org $200
@@ -62,10 +63,14 @@ PPUADDR_ATR .ds 2
 CPUADDR_NAM .ds 2 ;Address in PPU memory for the Background/Attributes
 CPUADDR_ATR .ds 2
 
-PPU_DRAW .ds 1
+PPU_DRAW 	.ds 1
 PPU_NODRAW	= 0
 PPU_RLEDRAW = 1
-PPU_RLEATRDRAW = 2
+PPU_BYTEDRAW = 2
+
+PPU_LENGTH	.ds 1 ;No. of bytes to be written (not used by RLE)
+PPU_BYTE	.ds 1 ;Byte to be copied over (repeated byte draw mode)
+PPU_HORIZ	.ds 1 ;Writes are vertical or horizontal?
 
  .org $400
 OBJ_MAX = 16
@@ -125,6 +130,8 @@ INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro in frame intervals.
 	.include "titlescr.asm"
 	
 	.include "state.asm"
+	
+	.include "ppu.asm"
 
  .bank 1
  .org $A000
@@ -241,9 +248,6 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
-	LDA #4
-	STA RLE_MAX
-	
 	JSR ObjectList_Init	;Run this only once
 	
 	JSR TitleInit
@@ -291,8 +295,36 @@ NMI:
 	
 	LDA PPU_DRAW
 	CMP #PPU_RLEDRAW
+	BEQ .rleDraw
+	CMP #PPU_BYTEDRAW
+	BEQ .byteDraw
+	
 	BNE .cleanup
 	
+.byteDraw
+	LDA PPU_HORIZ
+	CMP #FALSE
+	BEQ .byteDraw2
+	LDA #$8C
+	STA $2000 ;Vertical writing
+	
+.byteDraw2
+	LDA $2002
+	LDA PPUADDR_NAM
+	STA $2006
+	LDA PPUADDR_NAM + 1
+	STA $2006
+	
+	LDX PPU_LENGTH
+	LDA PPU_BYTE
+	
+	JSR PPU_WriteByteSeq
+	
+	LDA #PPU_NODRAW
+	STA PPU_DRAW
+	JMP .cleanup
+	
+.rleDraw
 	LDA $2002
 	LDA PPUADDR_NAM
 	STA $2006
@@ -316,8 +348,15 @@ NMI:
 	STA PPUADDR_NAM + 1
 	BCC .cleanup
 	INC PPUADDR_NAM
+	JMP .cleanup
 	
 .cleanup:
+	LDA #%00011110
+	STA $2001 ;enable ppu rendering
+	
+	LDA #$88
+	STA $2000
+	
 	LDA #0
 	STA $2005
 	STA $2005 ;set scroll to (0,0)

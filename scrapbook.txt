@@ -1,5 +1,11 @@
 Scrapbook and Changelog
 
+03/11
+-A state machine interpreter was made, now we can "script" stuff like delays and ppu writes cleanly for each global game state. It even has a stack to store stuff! While the stack is being used in an interesting way to schedule PPU writes (that are written only when there's a DrawRLE opcode, 1 opcode per scheduled write), it is quite limited since the opcode subroutine can send only one writing job for the NMI interrupt subroutine, that is, only one type of PPU write per frame. A better solution would have the NMI manipulating the interpreter stack directly, writing bytes to the ppu up to a fixed limit each frame.
+
+-A byte repeat routine was made to write a tile for # times on the PPU. The intro state machine has partial code for a spiral, this is intended to simulate a screen transition. Ideally there will be an opcode responsible to do pretty screen transitions that tells the PPU to draw one of the many possible transitions, but that's for later.
+
+28/11
 -The collision detection routine behaves "strangely" but that might be caused by the object update order. Ideally this would be solved by running the projectiles first, then running the objects that check collisions against them (the main character's parasol). The "strange" behaviour is 1-frame delay that sometimes happen between a hit and its reaction.
 
 -Collision is also off by one on edge checks (being side by side, 1px distance triggers overlap. This shouldn't happen)
