@@ -120,3 +120,30 @@
  .end\@:
 	.endm
 	
+;Decreases value by 1, wraps around if result is less than 0.
+;DECWRAP(Target, WrapTo)
+ .macro DECWRAP
+	LDA \1
+	BEQ .wrap\@
+	DEC \1
+	JMP .end\@
+ .wrap\@:
+	LDA \2
+	STA \1
+ .end\@:
+	.endm
+	
+ .macro INCWRAP
+	INC \1
+	LDA \1
+	CMP \2
+	BCS .wrap\@
+	JMP .end\@
+ .wrap\@:
+	LDA #0
+	STA \1
+ .end\@:
+	.endm
+	
+ 
+	

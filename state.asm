@@ -7,7 +7,6 @@ State_Table:
 	.dw _OPC_Halt - 1
 	.dw _OPC_Error - 1
 	.dw _OPC_Delay - 1
-	.dw _OPC_ScheduleDraw - 1
 	.dw _OPC_DrawRLE - 1
 	.dw _OPC_DrawRepeatTiles - 1
 	
@@ -16,11 +15,9 @@ State_Table:
 OPC_Halt = 0
 OPC_Error = 1
 OPC_Delay = 2
-OPC_ScheduleDraw = 3
-OPC_DrawRLE = 4
-OPC_DrawRepeatTiles = 5
-	
-OPC_Invalid = OPC_DrawRepeatTiles + 1
+OPC_DrawRLE = 3
+OPC_DrawRepeatTiles = 4
+OPC_Invalid = 5
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -122,11 +119,11 @@ _OPC_Delay:
 	LDY #0
 	STY <INT_R2 ;Resets timer
 	
-	LPC ;Steps and loads argument into A
-	STA <INT_R3
-	
 	INY
 	STY <INT_R1
+	
+	LPC ;Steps and loads argument into A
+	STA <INT_R3
 	
 .tick
 	TCK <INT_R2
@@ -136,132 +133,50 @@ _OPC_Delay:
 	JSR Interpreter_AllowStep
 .exit
 	RTS
-
-;Pushes a CPU and a PPU Address into the stack.
-;Args =  4 bytes (Addresses = Lo/Hi)
-_OPC_ScheduleDraw:
-	LDX #4
-	JSR Interpreter_PushArgs
-	
-	JSR Interpreter_AllowStep
-	RTS
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
-;Arguments: 0
+;Arguments: 4 bytes (PPU Target, CPU source)
 _OPC_DrawRLE:
-RLE_MAXBYTES = 24
-	LDA <INT_R1
-	BNE .waitNMI
-.1stTimeSetup
-	LDA #RLE_MAXBYTES
-	STA RLE_MAX
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
 	
-	JSR Interpreter_Pop
-	STA PPUADDR_NAM ;PPUADDR = Hi/Lo
-	JSR Interpreter_Pop
-	STA PPUADDR_NAM + 1
+	;CPU address
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
 	
-	JSR Interpreter_Pop
-	STA CPUADDR_NAM + 1 ;CPUADDR = Lo/Hi
-	JSR Interpreter_Pop
-	STA CPUADDR_NAM
-	
-	INC <INT_R1
-	LDA #PPU_RLEDRAW
-	STA PPU_DRAW
-	
-.waitNMI
-	LDA PPU_DRAW
-	CMP #PPU_NODRAW
-	BNE .end
+	;PPU Interrupt command
+	LDA #PPU_RLE
+	JSR PPU_Queue2_Insert
 	
 	JSR Interpreter_AllowStep
-.end
 	RTS
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
 ;Arguments: 5 bytes (Tile #, Length, IsHorizontal, PPUAddr)
 _OPC_DrawRepeatTiles:
-	LDA <INT_R1
-	BNE .waitNMI
-.1stTimeSetup:
 	LPC
-	STA <INT_R2 ;Tile #
+	JSR PPU_Queue1_Insert ;Tile #
 	LPC
-	STA <INT_R3 ;Length
+	JSR PPU_Queue1_Insert ;Length
 	
 	LPC
-	STA <INT_R4 ;IsHoriz
+	JSR PPU_Queue1_Insert ;IsHoriz
 	
 	LPC
-	STA <INT_16R1
+	JSR PPU_Queue1_Insert
 	LPC
-	STA <INT_16R1 + 1 ;Pointer to PPU
+	JSR PPU_Queue1_Insert ;Pointer to PPU
 
-	INC <INT_R1
+
+	LDA #PPU_REPEAT
+	JSR PPU_Queue2_Insert
 	
-.waitNMI
-	LDA PPU_DRAW
-	CMP #PPU_NODRAW
-	BNE .end
-	
-	LDA <INT_R3
-	CMP #0
-	BNE .write
-	;If R3 (length) = 0, no more stuff to write, step to next opcode.
 	JSR Interpreter_AllowStep
-	RTS
 	
-.write
-	;Ready to draw new tiles, draw remaining
-	LDA <INT_R4
-	STA PPU_HORIZ
-	
-	LDA <INT_16R1 + 1
-	STA PPUADDR_NAM
-	LDA <INT_16R1
-	STA PPUADDR_NAM + 1
-	
-	LDA <INT_R3
-	CMP #RLE_MAXBYTES
-	BCS .WriteMax
-	JMP .WriteRemaining
-	
-.WriteMax ;Writes a run of bytes.
-	LDA #RLE_MAXBYTES
-	STA PPU_LENGTH
-	LDA <INT_R2
-	STA PPU_BYTE
-	
-	LDA #PPU_BYTEDRAW
-	STA PPU_DRAW
-	
-	CLC
-	LDA #RLE_MAXBYTES
-	ADC <INT_16R1
-	STA <INT_16R1
-	BCC .addEnd
-	INC <INT_16R1 + 1 ;Increases PPU address by # of bytes written
-.addEnd
-
-	SEC
-	LDA <INT_R3
-	SBC #RLE_MAXBYTES
-	STA <INT_R3 ;Also subtracts length so we can keep track of how many bytes are left.
-	JMP .end
-	
-.WriteRemaining ;Last writing run
-	LDA <INT_R3
-	STA PPU_LENGTH
-	LDA <INT_R2
-	STA PPU_BYTE
-	
-	LDA #PPU_BYTEDRAW
-	STA PPU_DRAW
-	
-	LDA #0
-	STA <INT_R3
-.end
 	RTS
 	
 	

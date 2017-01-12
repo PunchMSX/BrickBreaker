@@ -29,15 +29,33 @@ INTERPRETER_STEP .ds 1 ;Toggle to run INTERPRETER_OPC or opcode pointed by the p
 INTERPRETER_PPU	.ds 2 ;Pointer to PPU RAM
 INTERPRETER_CPU	.ds 2 ;Pointer to CPU RAM
 
-INT_SP1	.ds 1 ;Offset to top (next empty slot) of interpreter stack 1 (64 bytes)
+INT_SP1	.ds 1 ;Offset to top (next empty slot) of interpreter stack (32 bytes)
+
 INTERPRETER_STACK = $0100
-INTERPRETER_STACK_MAX = 64
+INTERPRETER_STACK_MAX = 16
 
 INT_R1		.ds 1 ;Register #1 always gets set to 0 on each interpreter step
 INT_R2		.ds 1
 INT_R3		.ds 1
 INT_R4		.ds 1
 INT_16R1 	.ds 2 ;16 bit register
+
+
+;PPU Software command/address stack (ppu.asm)
+PPU_QP1F .ds 1 ;Offset to front of PPU command queue (16 bytes)
+PPU_QP1B .ds 1 ;          back
+PPU_QP2F .ds 1 ;Offset to front of PPU address queue (32 bytes)
+PPU_QP2B .ds 1 ;          back
+
+PPU_QR1	.ds 1
+PPU_QR2	.ds 1
+
+PPU_QUEUE1 = INTERPRETER_STACK + INTERPRETER_STACK_MAX
+PPU_QUEUE1_MAX = 64
+
+PPU_QUEUE2 = PPU_QUEUE1 + PPU_QUEUE1_MAX
+PPU_QUEUE2_MAX = 16
+
 
  .BSS
  .org $200
@@ -64,13 +82,18 @@ CPUADDR_NAM .ds 2 ;Address in PPU memory for the Background/Attributes
 CPUADDR_ATR .ds 2
 
 PPU_DRAW 	.ds 1
-PPU_NODRAW	= 0
-PPU_RLEDRAW = 1
-PPU_BYTEDRAW = 2
+RLE_MAXBYTES = 20
+
+PPU_COMMAND	.ds 1 ;Current command undergoing execution by the NMI thread.
 
 PPU_LENGTH	.ds 1 ;No. of bytes to be written (not used by RLE)
 PPU_BYTE	.ds 1 ;Byte to be copied over (repeated byte draw mode)
 PPU_HORIZ	.ds 1 ;Writes are vertical or horizontal?
+
+PPU_STEP	.ds 1 ;Retrieve next drawing command? True/False
+
+PPU_Q1EMPTY .ds 1 ;Used to distinguish a full from an empty stack
+PPU_Q2EMPTY .ds 1 ;(both will have front = back)
 
  .org $400
 OBJ_MAX = 16
@@ -249,6 +272,7 @@ RESET:
 	STA $2005 ;set scroll to (0,0)
 	
 	JSR ObjectList_Init	;Run this only once
+	JSR PPU_InitQueues
 	
 	JSR TitleInit
 	
@@ -276,6 +300,8 @@ Mainloop:
 	STA PPU_NEXTFRAME
 	JMP Mainloop
 	
+;**********************************************
+	
 NMI:
 	PHA
 	TXA
@@ -293,62 +319,7 @@ NMI:
 	LDA #2
 	STA $4014 ;Copy OAM Table
 	
-	LDA PPU_DRAW
-	CMP #PPU_RLEDRAW
-	BEQ .rleDraw
-	CMP #PPU_BYTEDRAW
-	BEQ .byteDraw
-	
-	BNE .cleanup
-	
-.byteDraw
-	LDA PPU_HORIZ
-	CMP #FALSE
-	BEQ .byteDraw2
-	LDA #$8C
-	STA $2000 ;Vertical writing
-	
-.byteDraw2
-	LDA $2002
-	LDA PPUADDR_NAM
-	STA $2006
-	LDA PPUADDR_NAM + 1
-	STA $2006
-	
-	LDX PPU_LENGTH
-	LDA PPU_BYTE
-	
-	JSR PPU_WriteByteSeq
-	
-	LDA #PPU_NODRAW
-	STA PPU_DRAW
-	JMP .cleanup
-	
-.rleDraw
-	LDA $2002
-	LDA PPUADDR_NAM
-	STA $2006
-	LDA PPUADDR_NAM + 1
-	STA $2006
-	
-	LDX CPUADDR_NAM      ;lo
-	LDY CPUADDR_NAM + 1  ;hi
-	JSR unrle_partial_resume
-	
-	LDA RLE_STAT
-	CMP #RLE_READY
-	BNE .updatePPUaddress
-	LDA #PPU_NODRAW
-	STA PPU_DRAW ;Drawing finished.
-	
-.updatePPUaddress
-	LDA PPUADDR_NAM + 1
-	CLC
-	ADC RLE_MAX
-	STA PPUADDR_NAM + 1
-	BCC .cleanup
-	INC PPUADDR_NAM
-	JMP .cleanup
+	JSR PPU_QueueInterpreter
 	
 .cleanup:
 	LDA #%00011110

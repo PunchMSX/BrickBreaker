@@ -24,3 +24,10 @@ Changelog:
 +Framework for game states
 +Title screen partially done
 +And more
+
+03/12
++Drawing routine for state machine, NMI subroutine
+
+11/01
++Code restructuring AGAIN (Created second state machine responsible for VBlank writes)
+
