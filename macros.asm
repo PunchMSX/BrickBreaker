@@ -145,5 +145,12 @@
  .end\@:
 	.endm
 	
- 
+ .macro ADD16
+	CLC
+	ADC \1
+	STA \1
+	LDA #0
+	ADC \1 + 1
+	STA \1 + 1
+	.endm
 	

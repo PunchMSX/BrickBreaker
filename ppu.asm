@@ -3,12 +3,12 @@
 PPU_INVALID = 255
 PPU_IDLE = 0
 PPU_RLE = 1
-PPU_REPEAT = 2
+PPU_SQREPEAT = 2
 
 PPU_Command_Table:
 	.dw _PPU_Idle - 1
 	.dw _PPU_RLE - 1
-	.dw _PPU_Repeat - 1
+	.dw _PPU_SqRepeat - 1
 
 PPU_QueueInterpreter:
 	LDA PPU_STEP
@@ -42,14 +42,106 @@ _PPU_Idle:
 	JSR PPU_AllowStep
 	RTS
 	
-_PPU_Repeat:
-	JSR PPU_Queue1_Retrieve
-	JSR PPU_Queue1_Retrieve
-	JSR PPU_Queue1_Retrieve
-	JSR PPU_Queue1_Retrieve
-	JSR PPU_Queue1_Retrieve
-	JSR PPU_AllowStep
+	
+PPU_WriteLine:
+	LDA $2002
+	
+	LDA PPUADDR_NAM + 1
+	STA $2006
+	LDA PPUADDR_NAM
+	STA $2006
+	
+.loop
+	STA $2007
+	DEX
+	BNE .loop
+	
 	RTS
+
+_PPU_SqRepeat:;(Tile #, Width, Height, PPUAddr)
+	LDA <PPU_QR1
+	BNE .cont
+.1stSetup
+	JSR PPU_Queue1_Retrieve
+	STA PPU_BYTE
+	JSR PPU_Queue1_Retrieve
+	STA PPU_LENGTH
+	JSR PPU_Queue1_Retrieve
+	STA PPU_LENGTH + 1
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM + 1
+	
+	LDA #0
+	STA <PPU_QR2 ;# of current column NNNN
+	LDA #0
+	STA <PPU_QR3 ;# of current line YYYYY
+	
+	LDA #$20
+	SEC
+	SBC PPU_LENGTH
+	STA <PPU_QR1 ;Offset to next line
+
+.cont
+	LDA #SQREPEAT_MAXBYTES
+	STA <PPU_QR4
+
+	LDX <PPU_QR2
+	
+.ready
+	LDA $2002
+	LDA PPUADDR_NAM + 1
+	STA $2006
+	LDA PPUADDR_NAM
+	STA $2006
+	LDA PPU_BYTE
+	
+.line
+	LDY <PPU_QR4
+	BEQ .max ;Stop if there are too many writes
+	STA $2007
+	INX
+	DEC <PPU_QR4
+	
+	CPX PPU_LENGTH
+	BCC .line
+	
+	INC <PPU_QR3
+	LDA <PPU_QR3
+	CMP PPU_LENGTH + 1
+	BCS .end ;All lines drawn
+	
+	;Change PPU ptr to beggining of next line
+	CLC
+	LDA #$20
+	ADC PPUADDR_NAM
+	STA PPUADDR_NAM
+	LDA #0
+	ADC PPUADDR_NAM + 1
+	STA PPUADDR_NAM + 1
+	
+	LDX #0 ;Resets column counter
+	JMP .ready
+	
+.max
+	STX <PPU_QR2 ;Stores progress for later
+	TXA
+	CLC
+	ADC PPUADDR_NAM
+	STA PPUADDR_NAM
+	LDA #0
+	ADC PPUADDR_NAM + 1
+	STA PPUADDR_NAM + 1
+	
+	RTS
+	
+.end
+	LDA #TRUE
+	STA PPU_STEP
+	RTS
+	
+	
 	
 _PPU_RLE:
 	LDA <PPU_QR1

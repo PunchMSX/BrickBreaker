@@ -18,6 +18,20 @@ Intro_StateMachine:
 	.dw $236C, Text_PushRun
 	
 	.db OPC_Delay, 1
+	
+	.db OPC_DrawSquare, $0D, 1, 2
+	.dw $21D0
+	.db OPC_DrawSquare, $0D, 1, 3
+	.dw $21B1
+	.db OPC_DrawSquare, $0D, 2, 1
+	.dw $21AF
+	.db OPC_DrawSquare, $0D, 1, 3
+	.dw $21CF
+	.db OPC_DrawSquare, $0D, 3, 1
+	.dw $2210
+	.db OPC_DrawSquare, $0D, 1, 4
+	.dw $2192
+	
 	.db OPC_Halt
 	
 

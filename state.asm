@@ -8,7 +8,7 @@ State_Table:
 	.dw _OPC_Error - 1
 	.dw _OPC_Delay - 1
 	.dw _OPC_DrawRLE - 1
-	.dw _OPC_DrawRepeatTiles - 1
+	.dw _OPC_DrawSquare - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -16,7 +16,7 @@ OPC_Halt = 0
 OPC_Error = 1
 OPC_Delay = 2
 OPC_DrawRLE = 3
-OPC_DrawRepeatTiles = 4
+OPC_DrawSquare = 4
 OPC_Invalid = 5
 
 ;X, Y = Low/High address for first opcode to be interpreted.
@@ -156,15 +156,14 @@ _OPC_DrawRLE:
 	RTS
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
-;Arguments: 5 bytes (Tile #, Length, IsHorizontal, PPUAddr)
-_OPC_DrawRepeatTiles:
+;Arguments: 5 bytes (Tile #, Width, Height, PPUAddr)
+_OPC_DrawSquare:
 	LPC
 	JSR PPU_Queue1_Insert ;Tile #
 	LPC
 	JSR PPU_Queue1_Insert ;Length
-	
 	LPC
-	JSR PPU_Queue1_Insert ;IsHoriz
+	JSR PPU_Queue1_Insert ;Height
 	
 	LPC
 	JSR PPU_Queue1_Insert
@@ -172,7 +171,7 @@ _OPC_DrawRepeatTiles:
 	JSR PPU_Queue1_Insert ;Pointer to PPU
 
 
-	LDA #PPU_REPEAT
+	LDA #PPU_SQREPEAT
 	JSR PPU_Queue2_Insert
 	
 	JSR Interpreter_AllowStep

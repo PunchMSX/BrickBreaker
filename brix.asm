@@ -49,6 +49,8 @@ PPU_QP2B .ds 1 ;          back
 
 PPU_QR1	.ds 1
 PPU_QR2	.ds 1
+PPU_QR3	.ds 1
+PPU_QR4	.ds 1
 
 PPU_QUEUE1 = INTERPRETER_STACK + INTERPRETER_STACK_MAX
 PPU_QUEUE1_MAX = 64
@@ -83,12 +85,13 @@ CPUADDR_ATR .ds 2
 
 PPU_DRAW 	.ds 1
 RLE_MAXBYTES = 20
+SQREPEAT_MAXBYTES = 12
 
 PPU_COMMAND	.ds 1 ;Current command undergoing execution by the NMI thread.
 
-PPU_LENGTH	.ds 1 ;No. of bytes to be written (not used by RLE)
+PPU_LENGTH	.ds 2 ;No. of bytes to be written (not used by RLE)
 PPU_BYTE	.ds 1 ;Byte to be copied over (repeated byte draw mode)
-PPU_HORIZ	.ds 1 ;Writes are vertical or horizontal?
+PPU_MAXWRITES .ds 1 ;Filled by drawing subroutines with amount of bytes to be written
 
 PPU_STEP	.ds 1 ;Retrieve next drawing command? True/False
 
