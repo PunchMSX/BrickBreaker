@@ -51,6 +51,8 @@ PPU_QR1	.ds 1
 PPU_QR2	.ds 1
 PPU_QR3	.ds 1
 PPU_QR4	.ds 1
+PPU_QR5 .ds 1
+PPU_QR6 .ds 1
 
 PPU_QUEUE1 = INTERPRETER_STACK + INTERPRETER_STACK_MAX
 PPU_QUEUE1_MAX = 64
@@ -138,7 +140,12 @@ GAME_SUBSTATE 	.ds 1
 INTRO_BULLETQ 	.ds 1
 INTRO_CHARQ		.ds 1
 INTRO_TIMER		.ds 1
-INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro in frame intervals.
+INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro at frame intervals.
+
+  .org $600
+COLLISION_MAP	 .ds 154 ;(14*11 collision map)
+COLLISION_OFFSET .ds 4  ;
+COLLISION_TILES	 .ds 4  ; output from bg overlap subroutine, starts from top left, clockwise
 
  .code
  .bank 0
@@ -154,6 +161,7 @@ INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro in frame intervals.
 	.include "collision.txt"
 	
 	.include "titlescr.asm"
+	.include "debug.asm"
 	
 	.include "state.asm"
 	
@@ -277,7 +285,7 @@ RESET:
 	JSR ObjectList_Init	;Run this only once
 	JSR PPU_InitQueues
 	
-	JSR TitleInit
+	JSR Debug_MapEdit_Init
 	
 ;*********************************************
 	
@@ -287,7 +295,7 @@ Mainloop:
 	
 		JSR Ctrl_Read
 		
-		JSR TitleLoop
+		JSR Debug_MapEdit
 		
 		JSR ObjectList_UpdateAll
 		JSR ObjectList_OAMUpload
@@ -346,6 +354,7 @@ NMI:
 	PLA	;Restore Processor Status
 	RTI
 	
+ .data
  .bank 3
  .org $E000
 
@@ -365,6 +374,8 @@ Text_PushRun:
 	
 bg_Title_Screen:
 	.incbin "art/title.rle"
+bg_Playfield:
+	.incbin "art/playfield.rle"
 	
  .org $FFFA
 	 .dw NMI

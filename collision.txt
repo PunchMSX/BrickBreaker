@@ -6,6 +6,7 @@
 ;***********************************
 
 ;The table index for an object must be the same for metasprites and collision
+;Max 64 entries (due to multipying index by 4 to access data)
 MS_Collision_Table:
 _COL_Projectile_Default:
 	.db -3,  3,  -3,  3

@@ -77,11 +77,9 @@ _PPU_SqRepeat:;(Tile #, Width, Height, PPUAddr)
 	STA <PPU_QR2 ;# of current column NNNN
 	LDA #0
 	STA <PPU_QR3 ;# of current line YYYYY
+
 	
-	LDA #$20
-	SEC
-	SBC PPU_LENGTH
-	STA <PPU_QR1 ;Offset to next line
+	INC <PPU_QR1
 
 .cont
 	LDA #SQREPEAT_MAXBYTES
@@ -90,11 +88,24 @@ _PPU_SqRepeat:;(Tile #, Width, Height, PPUAddr)
 	LDX <PPU_QR2
 	
 .ready
+	TXA
+	CLC
+	ADC PPUADDR_NAM
+	STA <PPU_QR5 ;We'll use the base ppu address plus the X reg backup
+				 ;(aka how many bytes we wrote last time without updating PPUADDR)
+				 ;this isn't added after each run because this confuses
+				 ;our method of adding a fixed offset to PPUADDR to go to the
+				 ;next line.
+	
 	LDA $2002
+	
 	LDA PPUADDR_NAM + 1
+	ADC #0		;This increases by 1 if X + PPUADDR(Low) > 255
 	STA $2006
-	LDA PPUADDR_NAM
+	
+	LDA <PPU_QR5
 	STA $2006
+	
 	LDA PPU_BYTE
 	
 .line
@@ -126,13 +137,13 @@ _PPU_SqRepeat:;(Tile #, Width, Height, PPUAddr)
 	
 .max
 	STX <PPU_QR2 ;Stores progress for later
-	TXA
-	CLC
-	ADC PPUADDR_NAM
-	STA PPUADDR_NAM
-	LDA #0
-	ADC PPUADDR_NAM + 1
-	STA PPUADDR_NAM + 1
+	;TXA
+	;CLC
+	;ADC PPUADDR_NAM
+	;STA PPUADDR_NAM
+	;LDA #0
+	;ADC PPUADDR_NAM + 1
+	;STA PPUADDR_NAM + 1
 	
 	RTS
 	

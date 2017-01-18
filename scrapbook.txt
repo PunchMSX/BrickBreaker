@@ -31,3 +31,5 @@ Changelog:
 11/01
 +Code restructuring AGAIN (Created second state machine responsible for VBlank writes)
 
+12/01
++Code for drawing from the NMI done.
