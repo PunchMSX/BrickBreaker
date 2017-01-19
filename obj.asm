@@ -9,6 +9,7 @@ ObjectLogic_Table:
 	.dw _OBJ_Intro_Player - 1
 	.dw _OBJ_Intro_Parachute - 1
 	.dw _OBJ_Intro_Ball - 1
+	.dw _OBJ_Debug_Checkered - 1
 	
 ObjectInit_Table:
 	.dw _OBJ_Player_Init - 1
@@ -16,6 +17,16 @@ ObjectInit_Table:
 	.dw _OBJ_Intro_Player_Init - 1
 	.dw _OBJ_Intro_Parachute_Init - 1
 	.dw _OBJ_Intro_Ball_Init - 1
+	.dw _OBJ_Debug_Checkered_Init - 1
+	
+_OBJ_Debug_Checkered_Init:
+	LDA #11
+	STA OBJ_METASPRITE, x
+	RTS
+	
+_OBJ_Debug_Checkered:
+	RTS
+
 
 _OBJ_Intro_Parachute_Init:
 	LDA #10
@@ -428,6 +439,7 @@ Metasprite_Y = TEMP_BYTE + 3
 	CLC
 	ADC Metasprite_Y
 	STA OAM_COPY, x
+	DEC OAM_COPY, x ;PPU draws sprite off by +1 px in Y.
 	INY
 	INX
 	;Sprite ID

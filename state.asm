@@ -137,6 +137,14 @@ _OPC_Delay:
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
 ;Arguments: 4 bytes (PPU Target, CPU source)
 _OPC_DrawRLE:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least 4 slots to work
+	
+	;PPU Interrupt command
+	LDA #PPU_RLE
+	JSR PPU_Queue1_Insert
+	
 	LPC
 	JSR PPU_Queue1_Insert
 	LPC
@@ -148,16 +156,21 @@ _OPC_DrawRLE:
 	LPC
 	JSR PPU_Queue1_Insert
 	
-	;PPU Interrupt command
-	LDA #PPU_RLE
-	JSR PPU_Queue2_Insert
-	
 	JSR Interpreter_AllowStep
+	
+.fail ;If PPU queue lacks space for our command, try again next frame
 	RTS
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
 ;Arguments: 5 bytes (Tile #, Width, Height, PPUAddr)
 _OPC_DrawSquare:
+	JSR PPU_Queue1_Capacity
+	CMP #6
+	BCC .fail ;Needs at least two slots to work
+	
+	LDA #PPU_SQREPEAT
+	JSR PPU_Queue1_Insert
+	
 	LPC
 	JSR PPU_Queue1_Insert ;Tile #
 	LPC
@@ -169,15 +182,11 @@ _OPC_DrawSquare:
 	JSR PPU_Queue1_Insert
 	LPC
 	JSR PPU_Queue1_Insert ;Pointer to PPU
-
-
-	LDA #PPU_SQREPEAT
-	JSR PPU_Queue2_Insert
 	
 	JSR Interpreter_AllowStep
 	
+.fail ;If PPU queue lacks space for our command, try again next frame
 	RTS
-	
 	
 Interpreter_AllowStep:
 	LDA #TRUE

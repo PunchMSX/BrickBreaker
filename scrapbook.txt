@@ -33,3 +33,18 @@ Changelog:
 
 12/01
 +Code for drawing from the NMI done.
+
+19/01
+So much work done!
++Untested collision map and tile overlap routines
++Revamped NMI Queue command machine, fixed bugs
+	(some commands may suggest an immediate step in the same vblank (ie multiple commands "at once")!)
++Debug game state to edit a collision map made
++Metatile file created
++Checkerboard cursor object (metasprite) added
++Untested Metatile drawing routine created
+
+-Next step: create code in debug gamestate to build collision map with joystick
+			add another debug gamestate to test bounding box to metatile collisions
+			
+~13 days to go~

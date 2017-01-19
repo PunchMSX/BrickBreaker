@@ -1,10 +1,7 @@
 ;metatile.asm
 
+;64 metatiles MAX (8-bit indexed access limitation)
 Metatile_Table:
-	.dw Tile_Empty
-	.dw Tile_Rubble
-	.dw Tile_Brick
-	
 Tile_Empty:
 	.db $20, $20, $20, $20
 Tile_Rubble:

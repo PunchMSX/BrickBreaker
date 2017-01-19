@@ -224,7 +224,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table + 2, y
 	SEC
-	SBC #48 ;Playfield starts 48 pixels away from top edge
+	SBC #32 ;Playfield starts 48 pixels away from top edge
 	LSR A
 	LSR A
 	LSR A
@@ -236,7 +236,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table + 3, y
 	SEC
-	SBC #48 ;Playfield starts 48 pixels away from top edge
+	SBC #32 ;Playfield starts 48 pixels away from top edge
 	LSR A
 	LSR A
 	LSR A
@@ -286,4 +286,22 @@ MUL14_Table:
 	.db 14 * 8
 	.db 14 * 9
 	.db 14 * 10
+	
+MUL16_Table:
+	.db 0
+	.db 16
+	.db 16 * 2
+	.db 16 * 3
+	.db 16 * 4
+	.db 16 * 5
+	.db 16 * 6
+	.db 16 * 7
+	.db 16 * 8
+	.db 16 * 9
+	.db 16 * 10
+	.db 16 * 11
+	.db 16 * 12
+	.db 16 * 13
+	.db 16 * 14
+	.db 16 * 15
 

@@ -44,8 +44,6 @@ INT_16R1 	.ds 2 ;16 bit register
 ;PPU Software command/address stack (ppu.asm)
 PPU_QP1F .ds 1 ;Offset to front of PPU command queue (16 bytes)
 PPU_QP1B .ds 1 ;          back
-PPU_QP2F .ds 1 ;Offset to front of PPU address queue (32 bytes)
-PPU_QP2B .ds 1 ;          back
 
 PPU_QR1	.ds 1
 PPU_QR2	.ds 1
@@ -55,11 +53,9 @@ PPU_QR5 .ds 1
 PPU_QR6 .ds 1
 
 PPU_QUEUE1 = INTERPRETER_STACK + INTERPRETER_STACK_MAX
-PPU_QUEUE1_MAX = 64
+PPU_QUEUE1_MAX = 80
 
-PPU_QUEUE2 = PPU_QUEUE1 + PPU_QUEUE1_MAX
-PPU_QUEUE2_MAX = 16
-
+CALL_ARGS .ds 6 ;Common RAM Space for CPU subroutines that require arguments.
 
  .BSS
  .org $200
@@ -74,6 +70,16 @@ NEXTFRAME_NO	= 1
 
 CTRLPORT_1 .ds 1
 CTRLPORT_2 .ds 1
+OLDCTRL_1  .ds 1
+OLDCTRL_2  .ds 1
+CTRL_A =		%10000000
+CTRL_B =		%01000000
+CTRL_SELECT = 	%00100000
+CTRL_START = 	%00010000
+CTRL_UP	= 		%00001000
+CTRL_DOWN = 	%00000100
+CTRL_LEFT = 	%00000010
+CTRL_RIGHT = 	%00000001
 
 ;NMI Background Drawing
 PPUCOUNT_NAM .ds 1 ;Number of sections to be drawn
@@ -93,12 +99,17 @@ PPU_COMMAND	.ds 1 ;Current command undergoing execution by the NMI thread.
 
 PPU_LENGTH	.ds 2 ;No. of bytes to be written (not used by RLE)
 PPU_BYTE	.ds 1 ;Byte to be copied over (repeated byte draw mode)
-PPU_MAXWRITES .ds 1 ;Filled by drawing subroutines with amount of bytes to be written
+
+PPU_NUMWRITES .ds 1 ;# of bytes written to PPU in a given frame
 
 PPU_STEP	.ds 1 ;Retrieve next drawing command? True/False
+STEP_NOW = 2 ;Value used to read next command while in the same frame.
 
-PPU_Q1EMPTY .ds 1 ;Used to distinguish a full from an empty stack
+PPU_Q1EMPTY .ds 1 ;Used to distinguish a full from an empty queue
 PPU_Q2EMPTY .ds 1 ;(both will have front = back)
+
+PPU_Q1CAP	.ds 1 ;# of bytes free (call PPU_Queue_Capacity to update value.)
+PPU_Q2CAP	.ds 1
 
  .org $400
 OBJ_MAX = 16
@@ -142,6 +153,14 @@ INTRO_CHARQ		.ds 1
 INTRO_TIMER		.ds 1
 INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro at frame intervals.
 
+DEBUG_CURSORID	.ds 1
+DEBUG_CURSORX	.ds 1
+DEBUG_CURSORY	.ds 1
+DEBUG_OLDCURX	.ds 1
+DEBUG_OLDCURY	.ds 1
+DEBUG_DECIMALX	.ds 3
+DEBUG_DECIMALY	.ds 3
+
   .org $600
 COLLISION_MAP	 .ds 154 ;(14*11 collision map)
 COLLISION_OFFSET .ds 4  ;
@@ -166,6 +185,7 @@ COLLISION_TILES	 .ds 4  ; output from bg overlap subroutine, starts from top lef
 	.include "state.asm"
 	
 	.include "ppu.asm"
+	.include "metatile.asm"
 
  .bank 1
  .org $A000
@@ -183,6 +203,11 @@ RNG_Next:
 	RTS
 	
 Ctrl_Read:
+	LDA CTRLPORT_1
+	STA OLDCTRL_1
+	LDA CTRLPORT_2
+	STA OLDCTRL_2
+	
 	LDA #1
 	STA $4016
 	LDA #0
@@ -216,6 +241,30 @@ DrawScanline: ;Good old CPU processing time indicator
 	
 	LDA #%00011110 ;restore $2001 reg settings
 	STA $2001
+	RTS
+	
+;Output: TEMP_BYTE (3) = decimal digits
+;Input: A (number to be converted)
+ConvertToDecimal:
+	LDX #0
+	STX <TEMP_BYTE
+	STX <TEMP_BYTE + 1
+	STX <TEMP_BYTE + 2
+	
+.get100
+	CMP #100
+	BCC .get10
+	SBC #100
+	INC <TEMP_BYTE
+	JMP .get100
+.get10
+	CMP #10
+	BCC .get1
+	SBC #10
+	INC <TEMP_BYTE + 1
+	JMP .get10
+.get1
+	STA <TEMP_BYTE + 2
 	RTS
 	
 waitPPU:

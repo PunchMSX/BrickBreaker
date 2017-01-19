@@ -29,5 +29,7 @@ _COL_Chara_Hit_2:
 _COL_Intro_Umbrella_Hit:
 	.db -12, 12,  0,  8 
 _COL_Intro_Umbrella_Ok:
-	.db -6, 6,  0,  8
+	.db -6,  6,  0,  8
+_COL_Debug_Checkered_16x16:
+	.db  0, 16,  0, 16
 	
