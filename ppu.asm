@@ -14,7 +14,7 @@ PPU_Command_Table:
 	.dw _PPU_DrawMetatile - 1
 	.dw _PPU_Draw8bitNumber - 1
 	
-PPU_MAXWRITES = 16 ;Maximum # of bytes to be written during VBlank, conservative guess.
+PPU_MAXWRITES = 8 ;Maximum # of bytes to be written during VBlank, conservative guess.
 
 PPU_QueueInterpreter:
 	LDA #0
@@ -70,14 +70,13 @@ PPU_DrawMetatile:
 	CMP #4
 	BCC .fail ;Needs at least two slots to work
 	
-	PHA
 	LDA #PPU_METATILE
-	JSR PPU_Queue1_Insert
-	PLA
 	JSR PPU_Queue1_Insert
 	LDA <CALL_ARGS 
 	JSR PPU_Queue1_Insert
 	LDA <CALL_ARGS + 1
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS + 2
 	JSR PPU_Queue1_Insert
 	
 .fail
@@ -112,7 +111,7 @@ _PPU_Idle:
 ;(3 byte decimal address, PPU Address)
 _PPU_Draw8bitNumber:
 	LDA PPU_NUMWRITES
-	CMP #PPU_MAXWRITES - 8
+	CMP #PPU_MAXWRITES - 4
 	BCC .start
 	RTS	;Too many writes, wait for next frame.
 .start
@@ -156,7 +155,7 @@ _PPU_Draw8bitNumber:
 	
 	
 .exit
-	LDA #8
+	LDA #3
 	CLC
 	ADC PPU_NUMWRITES
 	STA PPU_NUMWRITES
@@ -199,6 +198,8 @@ _PPU_DrawMetatile:
 	ADC <PPU_QR3
 	STA <PPU_QR3 ;pos = (y * 16) + x * 2
 	LDA #$20
+	CLC
+	ADC <PPU_QR4
 	STA <PPU_QR4
 	
 .write:
@@ -226,11 +227,10 @@ _PPU_DrawMetatile:
 	PHA			;Add $20 to address = jump one line.
 	
 	LDA <PPU_QR4
-	CLC
 	ADC #0		;Will add 1 if previous add overflowed.
-	STA $2007
+	STA $2006
 	PLA
-	STA $2007
+	STA $2006
 	
 	LDA Metatile_Table + 2, x
 	STA $2007

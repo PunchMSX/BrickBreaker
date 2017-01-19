@@ -111,23 +111,81 @@ Debug_MapEdit:
 	DEC DEBUG_CURSORY
 	LDA DEBUG_CURSORY
 	CMP #$FF
-	BNE .endCtrl
+	BNE .buttonB
 	INC DEBUG_CURSORY ;set cursor X to zero
-	JMP .endCtrl
+	JMP .buttonB
 .down
 	LDA CTRLPORT_1
 	AND #CTRL_DOWN
-	BEQ .endCtrl
+	BEQ .buttonB
 	LDA OLDCTRL_1
 	AND #CTRL_DOWN
-	BNE .endCtrl
+	BNE .buttonB
 	INC DEBUG_CURSORY
 	LDA DEBUG_CURSORY
 	CMP #11
-	BCC .endCtrl
+	BCC .buttonB
 	DEC DEBUG_CURSORY ;set cursor X to 10
-.endCtrl
 
+.buttonB:
+	LDA CTRLPORT_1
+	AND #CTRL_B
+	BEQ .buttonA
+	LDA OLDCTRL_1
+	AND #CTRL_B
+	BNE .buttonA
+	
+	LDA #2
+	STA <CALL_ARGS
+	LDA DEBUG_CURSORX
+	CLC
+	ADC #1
+	STA <CALL_ARGS + 1
+	LDA DEBUG_CURSORY
+	CLC
+	ADC #2
+	STA <CALL_ARGS + 2
+	JSR PPU_DrawMetatile
+	
+	LDA DEBUG_CURSORY
+	TAY
+	LDA MUL14_Table, y
+	CLC
+	ADC DEBUG_CURSORX
+	TAY
+	LDA #2
+	STA COLLISION_MAP, y
+
+.buttonA:
+	LDA CTRLPORT_1
+	AND #CTRL_A
+	BEQ .endCtrl
+	LDA OLDCTRL_1
+	AND #CTRL_A
+	BNE .endCtrl
+	
+	LDA #0
+	STA <CALL_ARGS
+	LDA DEBUG_CURSORX
+	CLC
+	ADC #1
+	STA <CALL_ARGS + 1
+	LDA DEBUG_CURSORY
+	CLC
+	ADC #2
+	STA <CALL_ARGS + 2
+	JSR PPU_DrawMetatile
+	
+	LDA DEBUG_CURSORY
+	TAY
+	LDA MUL14_Table, y
+	CLC
+	ADC DEBUG_CURSORX
+	TAY
+	LDA #0
+	STA COLLISION_MAP, y
+	
+.endCtrl
 	LDA DEBUG_CURSORX
 	CMP DEBUG_OLDCURX
 	BEQ .updateX
@@ -197,8 +255,6 @@ Debug_MapEdit:
 	ASL A ;times 16
 	
 	STA OBJ_YPOS, x
-	
-
 	
 	RTS
 	
