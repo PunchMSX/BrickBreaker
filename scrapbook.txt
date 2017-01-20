@@ -48,3 +48,13 @@ So much work done!
 			add another debug gamestate to test bounding box to metatile collisions
 			
 ~13 days to go~
+
+20/01
++The BG-AABB bounding box overlap code is verified to be correct.
++Metatile drawing routines corrected and in use.
++Some code used to test collisions was done, to positive results.
++Metasprite reference file (metasprite.msp) file updated to reflect the order in anim.txt
++Yet another RTS trick subroutine added, this time to switch between game states.
+
++Testing sprite-to-bg collisions highlighted what was problem with collision bounding boxes, the x2,y2 points are all off by one. Mystery solved and boxes fixed.
+

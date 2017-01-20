@@ -12,7 +12,9 @@ Debug_RLEText1:
 	.db 1
 	.db "START "
 	.db Char_STAR
-	.db " COLLISION TEST"
+	.db " EXIT SEL "
+	.db Char_STAR
+	.db "SPAWN BALL"
 	.db 1, 0
 Debug_RLEText2:
 	.db 1
@@ -43,7 +45,7 @@ Debug_StateMachine0:
 	.dw $2343, Debug_RLEText0
 	
 	.db OPC_DrawRLE
-	.dw $2365, Debug_RLEText1
+	.dw $2362, Debug_RLEText1
 	
 	.db OPC_DrawRLE
 	.dw $2385, Debug_RLEText2
@@ -60,12 +62,18 @@ Debug_MapEdit_Init:
 	
 	LDX #16
 	LDY #48
-	LDA #5
+	LDA #OBJ_DEBUG_CHECKERED
 	JSR ObjectList_Insert
 	STX DEBUG_CURSORID
 	LDA #0
 	STA DEBUG_CURSORX
 	STA DEBUG_CURSORY
+	
+	
+	LDX #64
+	LDY #96
+	LDA #OBJ_DEBUG_CHECKERED_SMALL
+	JSR ObjectList_Insert
 	RTS
 	
 Debug_MapEdit:
@@ -75,6 +83,19 @@ Debug_MapEdit:
 	STA DEBUG_OLDCURX
 	LDA DEBUG_CURSORY
 	STA DEBUG_OLDCURY
+	
+.StartButton
+	LDA CTRLPORT_1
+	AND #CTRL_START
+	BEQ .LeftRight
+	LDA OLDCTRL_1
+	AND #CTRL_START
+	BNE .LeftRight
+	
+	LDA #STATE_TITLE
+	STA GAME_STATE
+	RTS
+	
 	
 .LeftRight
 	LDA CTRLPORT_1
@@ -98,7 +119,7 @@ Debug_MapEdit:
 	BNE .UpDown
 	INC DEBUG_CURSORX
 	LDA DEBUG_CURSORX
-	CMP #14
+	CMP #COLMAP_WIDTH
 	BCC .UpDown
 	DEC DEBUG_CURSORX ;set cursor X to 13
 .UpDown
@@ -123,7 +144,7 @@ Debug_MapEdit:
 	BNE .buttonB
 	INC DEBUG_CURSORY
 	LDA DEBUG_CURSORY
-	CMP #11
+	CMP #COLMAP_HEIGHT
 	BCC .buttonB
 	DEC DEBUG_CURSORY ;set cursor X to 10
 
@@ -135,15 +156,15 @@ Debug_MapEdit:
 	AND #CTRL_B
 	BNE .buttonA
 	
-	LDA #2
+	LDA #TILE_BRICK
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
 	CLC
-	ADC #1
+	ADC #(COLMAP_OFFSETX / 16)
 	STA <CALL_ARGS + 1
 	LDA DEBUG_CURSORY
 	CLC
-	ADC #2
+	ADC #(COLMAP_OFFSETY / 16)
 	STA <CALL_ARGS + 2
 	JSR PPU_DrawMetatile
 	
@@ -153,7 +174,7 @@ Debug_MapEdit:
 	CLC
 	ADC DEBUG_CURSORX
 	TAY
-	LDA #2
+	LDA #TILE_BRICK
 	STA COLLISION_MAP, y
 
 .buttonA:
@@ -164,15 +185,15 @@ Debug_MapEdit:
 	AND #CTRL_A
 	BNE .endCtrl
 	
-	LDA #0
+	LDA #TILE_EMPTY
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
 	CLC
-	ADC #1
+	ADC #(COLMAP_OFFSETX / 16)
 	STA <CALL_ARGS + 1
 	LDA DEBUG_CURSORY
 	CLC
-	ADC #2
+	ADC #(COLMAP_OFFSETY / 16)
 	STA <CALL_ARGS + 2
 	JSR PPU_DrawMetatile
 	
@@ -182,7 +203,7 @@ Debug_MapEdit:
 	CLC
 	ADC DEBUG_CURSORX
 	TAY
-	LDA #0
+	LDA #TILE_EMPTY
 	STA COLLISION_MAP, y
 	
 .endCtrl
@@ -213,7 +234,7 @@ Debug_MapEdit:
 	LDX DEBUG_CURSORID
 	LDA DEBUG_CURSORX
 	CLC
-	ADC #1 ;Playfield is 1 metatile away from border
+	ADC #COLMAP_OFFSETX / 16 ;Playfield is 1 metatile away from border
 	ASL A
 	ASL A
 	ASL A
@@ -248,7 +269,7 @@ Debug_MapEdit:
 	LDX DEBUG_CURSORID
 	LDA DEBUG_CURSORY
 	CLC
-	ADC #2 ;Playfield is 3 metatiles away from top
+	ADC #COLMAP_OFFSETY / 16  ;Playfield is 3 metatiles away from top
 	ASL A
 	ASL A
 	ASL A

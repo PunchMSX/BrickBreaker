@@ -356,6 +356,8 @@ _PPU_RLE:
 	LDA <PPU_QR1
 	BNE .cont
 .1stSetup
+	LDA #RLE_READY
+	STA RLE_STAT
 	JSR PPU_Queue1_Retrieve
 	STA PPUADDR_NAM
 	JSR PPU_Queue1_Retrieve
@@ -507,6 +509,17 @@ PPU_Queue1_Retrieve:
 	LDA #PPU_INVALID
 	RTS
 	
-
+PPU_Queue1_Reset:
+	JSR PPU_InitQueues
+	LDX #0
+	LDA #0
+.loop
+	STA PPU_QUEUE1, x
+	inx
+	CPX #PPU_QUEUE1_MAX
+	BNE .loop
+	
+	RTS
+	
 
 	

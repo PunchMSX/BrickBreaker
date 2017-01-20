@@ -22,7 +22,7 @@ Intro_StateMachine:
 	
 
 	
-TitleInit:
+Title_Init:
 	LDA #0
 	STA INTRO_BULLETQ
 	STA INTRO_CHARQ
@@ -34,7 +34,7 @@ TitleInit:
 
 	RTS
 
-TitleLoop:
+Title_Loop:
 	TCK INTRO_SPAWN_TMR
 	TCK INTRO_SPAWN_TMR + 1
 	
@@ -61,7 +61,7 @@ Intro_SpawnBullets:
 	TAX
 	JSR RNG_Next
 	TAY
-	LDA #4
+	LDA #OBJ_INTRO_BALL
 	JSR ObjectList_Insert ;Intro_Ball
 	
 	CMP #$FF
@@ -83,7 +83,7 @@ Intro_SpawnChars:
 	CMP #INTRO_SPAWNTIME * 2
 	BCC .end
 	
-	LDA #2
+	LDA #OBJ_INTRO_PLAYER
 	JSR ObjectList_Insert ;Main Character
 	
 	CMP #$FF

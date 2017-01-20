@@ -134,19 +134,8 @@ OBJ_INTSTATE2	.ds OBJ_MAX
 OBJ_INTSTATE3	.ds OBJ_MAX
 
  .org $500
-STATE_PAUSE	= 0
-STATE_TITLE = 1
-STATE_HISCORE = 2
-STATE_GAME = 3
-STATE_PUZZLEGAME = 4
-STATE_GAMEOVER = 5
-STATE_ENDING_WIN = 6
-STATE_ENDING_LOSE = 7
-STATE_FALSEENDING = 8
-STATE_CREDITS = 9
-
 GAME_STATE		.ds 1
-GAME_SUBSTATE 	.ds 1
+GAME_OLDSTATE 	.ds 1
 
 INTRO_BULLETQ 	.ds 1
 INTRO_CHARQ		.ds 1
@@ -165,12 +154,18 @@ DEBUG_DECIMALY	.ds 3
 COLLISION_MAP	 .ds 154 ;(14*11 collision map)
 COLLISION_OFFSET .ds 4  ;
 COLLISION_TILES	 .ds 4  ; output from bg overlap subroutine, starts from top left, clockwise
+COLMAP_WIDTH = 14
+COLMAP_HEIGHT = 11
+COLMAP_OFFSETX	= 16 ;Playfield is 16 pixels away from left corner
+COLMAP_OFFSETY  = 32
 
  .code
  .bank 0
  .org $8000
 	.include "macros.asm"
 	.include "lib/rle.asm"
+	
+	.include "gamestate.asm"
 	
 	.include "obj.asm"
 	.include "anim.asm"
@@ -331,10 +326,15 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
+	LDA #10
+	STA GAME_STATE
+	LDA #255
+	STA GAME_OLDSTATE
+	
 	JSR ObjectList_Init	;Run this only once
 	JSR PPU_InitQueues
 	
-	JSR Debug_MapEdit_Init
+	;JSR Debug_MapEdit_Init
 	
 ;*********************************************
 	
@@ -344,7 +344,7 @@ Mainloop:
 	
 		JSR Ctrl_Read
 		
-		JSR Debug_MapEdit
+		JSR GameStateManager
 		
 		JSR ObjectList_UpdateAll
 		JSR ObjectList_OAMUpload

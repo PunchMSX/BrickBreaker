@@ -1,30 +1,153 @@
 SpeedX = OBJ_INTSTATE1
 SpeedY = OBJ_INTSTATE2	
 
+OBJ_DEBUG_CHECKERED = 0
+OBJ_DEBUG_CHECKERED_SMALL = 1
+
+OBJ_INTRO_PLAYER = 2
+OBJ_INTRO_PARACHUTE = 3
+OBJ_INTRO_BALL = 4
+
+OBJ_BALL = 5
+
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
 ObjectLogic_Table:
-	.dw _OBJ_Player - 1
-	.dw _OBJ_Ball - 1
+	.dw _OBJ_Debug_Checkered - 1
+	.dw _OBJ_Debug_Checkered_Small - 1
+	
 	.dw _OBJ_Intro_Player - 1
 	.dw _OBJ_Intro_Parachute - 1
 	.dw _OBJ_Intro_Ball - 1
-	.dw _OBJ_Debug_Checkered - 1
+	
+	.dw _OBJ_Ball - 1
 	
 ObjectInit_Table:
-	.dw _OBJ_Player_Init - 1
-	.dw _OBJ_Ball_Init - 1
+	.dw _OBJ_Debug_Checkered_Init - 1
+	.dw _OBJ_Debug_Checkered_Small_Init - 1
+	
 	.dw _OBJ_Intro_Player_Init - 1
 	.dw _OBJ_Intro_Parachute_Init - 1
 	.dw _OBJ_Intro_Ball_Init - 1
-	.dw _OBJ_Debug_Checkered_Init - 1
+	
+	.dw _OBJ_Ball_Init - 1
+	
+_OBJ_Ball_Init:
+.gen
+	JSR RNG_Next
+	AND #%00000110
+	SEC
+	SBC #4
+	STA SpeedX, x
+	
+	JSR RNG_Next
+	SEC
+	SBC #4
+	AND #%00000110
+	STA SpeedY, x
+	
+	BNE .end
+	LDA SpeedX, x
+	BEQ .gen ;If both speed values are 0, retry.
+.end
+
+_OBJ_Ball:
+	LDA OBJ_XPOS, x
+	STA OBJ_INTSTATE1, x
+	LDA OBJ_YPOS, x
+	STA OBJ_INTSTATE2, x ;Backup original X,Y position
+	
+.LeftRight
+	;Determine the current direction in the X axis
+	LDA OBJ_XPOS, x
+	BMI .left
+.right
+	CLC
+	ADC SpeedX, x
+.left
+	
 	
 _OBJ_Debug_Checkered_Init:
 	LDA #11
 	STA OBJ_METASPRITE, x
 	RTS
 	
+_OBJ_Debug_Checkered_Small_Init:
+	LDA #12
+	STA OBJ_METASPRITE, x
+	RTS
+	
 _OBJ_Debug_Checkered:
+	RTS
+	
+_OBJ_Debug_Checkered_Small:
+	LDA OBJ_XPOS, x
+	STA OBJ_INTSTATE1, x
+	LDA OBJ_YPOS, x
+	STA OBJ_INTSTATE2, x ;Backup original X,Y position
+	LDA #0
+	STA OBJ_INTSTATE3, x ;Direction
+
+.LeftRight
+	LDA CTRLPORT_1
+	AND #CTRL_LEFT
+	BEQ .right
+	LDA #1
+	STA OBJ_INTSTATE3, x ;Direction
+	LDA OBJ_XPOS, x
+	SEC
+	SBC #1
+	STA OBJ_XPOS, x
+	CMP #16
+	BCS .HorizColdetLeft
+	LDA OBJ_INTSTATE1, x
+	STA OBJ_XPOS, x ;restore X position if collides with wall
+	JMP .UpDown
+.right
+	LDA CTRLPORT_1
+	AND #CTRL_RIGHT
+	BEQ .UpDown
+	LDA #2
+	STA OBJ_INTSTATE3, x ;Direction
+	LDA OBJ_XPOS, x
+	CLC
+	ADC #1
+	STA OBJ_XPOS, x
+	CMP #232
+	BCC .HorizColdetRight
+	LDA OBJ_INTSTATE1, x
+	STA OBJ_XPOS, x ;restore X position if collides with wall
+	JMP .UpDown
+	
+.HorizColdetLeft
+	JSR Overlap_Background_Small
+
+	LDY COLLISION_OFFSET + 0
+	LDA COLLISION_MAP, y
+	BNE .col
+	LDY COLLISION_OFFSET + 2
+	LDA COLLISION_MAP, y
+	BNE .col
+	JMP .UpDown
+	
+.HorizColdetRight
+	JSR Overlap_Background_Small
+
+	LDY COLLISION_OFFSET + 1
+	LDA COLLISION_MAP, y
+	BNE .col
+	LDY COLLISION_OFFSET + 3
+	LDA COLLISION_MAP, y
+	BNE .col
+	JMP .UpDown
+
+.col
+	LDA OBJ_INTSTATE1, x ;Revert to previous position if collision is true
+	STA OBJ_XPOS, x
+	RTS
+	
+.UpDown
+	
 	RTS
 
 
@@ -143,86 +266,6 @@ _OBJ_Intro_Parachute:
 	
 .destroy: ;If parent doesn't exist, destroy self
 	JSR ObjectList_Remove
-	RTS
-	
-	
-_OBJ_Player_Init:
-	RTS
-_OBJ_Player:
-.l
-	LDA CTRLPORT_1
-	AND #%00000010
-	BEQ .r
-	DEC OBJ_XPOS, x
-.r
-	LDA CTRLPORT_1
-	AND #%00000001
-	BEQ .u
-	INC OBJ_XPOS, x
-.u
-	LDA CTRLPORT_1
-	AND #%00000100
-	BEQ .d
-	DEC OBJ_YPOS, x
-.d
-	LDA CTRLPORT_1
-	AND #%00001000
-	BEQ .coldet
-	INC OBJ_YPOS, x
-	
-.coldet
-	JSR Overlap_Test_All
-	LDA OBJ_COLLISION, x
-	CMP #$FF
-	BEQ .animate
-	
-	LDY #1
-	JSR ChangeAnimation
-.animate
-	JSR AnimTimer_Tick
-	JSR AnimateObject
-	
-	RTS
-	
-_OBJ_Ball_Init:
-.gen
-	JSR RNG_Next
-	AND #%00000110
-	SEC
-	SBC #4
-	STA SpeedX, x
-	
-	JSR RNG_Next
-	SEC
-	SBC #4
-	AND #%00000110
-	STA SpeedY, x
-	
-	BNE .end
-	LDA SpeedX, x
-	BEQ .gen ;If both speed values are 0, retry.
-.end
-	RTS
-
-_OBJ_Ball:
-.moveh
-	LDA SpeedX, x
-	CLC
-	ADC OBJ_XPOS, x
-	STA OBJ_XPOS, x
-.movev
-	LDA SpeedY, x
-	CLC
-	ADC OBJ_YPOS, x
-	STA OBJ_YPOS, x
-	
-.animate
-	LDA #0
-	STA OBJ_METASPRITE, x
-	
-.coldet
-	LDA #255
-	STA OBJ_COLLISION, x
 	RTS
 	
 _OBJ_Intro_Ball_Init:

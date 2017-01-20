@@ -9,27 +9,29 @@
 ;Max 64 entries (due to multipying index by 4 to access data)
 MS_Collision_Table:
 _COL_Projectile_Default:
-	.db -3,  3,  -3,  3
+	.db -3,  2,  -3,  2
 _COL_Umbrella_Up:
-	.db -12, 12,  0,  8 ;Col x1, x2, y1, y2
+	.db -11, 10,  0,  7 ;Col x1, x2, y1, y2
 _COL_Umbrella_Down:
-	.db -12, 12,  0,  8
+	.db -11, 10,  0,  7
 _COL_Chara_Up:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Chara_Up_Blink:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Chara_Down:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Chara_Down_Blink:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Chara_Hit_1:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Chara_Hit_2:
-	.db -8,   8,  0,  8
+	.db -6,   5,  0,  7
 _COL_Intro_Umbrella_Hit:
-	.db -12, 12,  0,  8 
+	.db -12, 11,  0,  7 
 _COL_Intro_Umbrella_Ok:
-	.db -6,  6,  0,  8
+	.db -6,  5,  0,  7
 _COL_Debug_Checkered_16x16:
-	.db  0, 16,  0, 16
+	.db  0, 15,  0, 15
+_COL_Debug_Checkered_8x8:
+	.db 0,  7,  0,  7
 	

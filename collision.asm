@@ -201,7 +201,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table, y
 	SEC
-	SBC #16 ;Playfield starts 16 pixels away from left edge
+	SBC #COLMAP_OFFSETX ;Playfield starts 16 pixels away from left edge
 	LSR A
 	LSR A
 	LSR A
@@ -212,7 +212,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table + 1, y
 	SEC
-	SBC #16 ;Playfield starts 16 pixels away from left edge
+	SBC #COLMAP_OFFSETX ;Playfield starts 16 pixels away from left edge
 	LSR A
 	LSR A
 	LSR A
@@ -224,7 +224,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table + 2, y
 	SEC
-	SBC #32 ;Playfield starts 48 pixels away from top edge
+	SBC #COLMAP_OFFSETY ;Playfield starts 48 pixels away from top edge
 	LSR A
 	LSR A
 	LSR A
@@ -236,7 +236,7 @@ Overlap_Background_Small:
 	CLC
 	ADC MS_Collision_Table + 3, y
 	SEC
-	SBC #32 ;Playfield starts 48 pixels away from top edge
+	SBC #COLMAP_OFFSETY ;Playfield starts 48 pixels away from top edge
 	LSR A
 	LSR A
 	LSR A
@@ -244,7 +244,6 @@ Overlap_Background_Small:
 	STA <_y2 ;y1 in the collision map
 	
 .topLeft:
-	LDY <_y1
 	LDA MUL14_Table, y ;Simulate y1 * 14
 	PHA
 	CLC

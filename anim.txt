@@ -17,6 +17,7 @@ Metasprite_Table:
 	.dw _MS_Intro_Umbrella_Hit
 	.dw _MS_Intro_Umbrella_Ok
 	.dw _MS_Debug_Checkered_16x16
+	.dw _MS_Debug_Checkered_8x8
 	
 _MS_Projectile_Default:
 	.db 1 * 4
@@ -73,6 +74,9 @@ _MS_Debug_Checkered_16x16:
 	.db 0, $0A, $0, 8
 	.db 8, $0A, $0, 0
 	.db 8, $0, $0, 8
+_MS_Debug_Checkered_8x8:
+	.db 4
+	.db 0, $0B, $0, 0
 	
 ;***********************************
 ;*** A n i m a t i o n  D a t a  ***

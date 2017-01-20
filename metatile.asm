@@ -1,5 +1,9 @@
 ;metatile.asm
 
+TILE_EMPTY = 0
+TILE_RUBBLE = 1
+TILE_BRICK = 2
+
 ;64 metatiles MAX (8-bit indexed access limitation)
 Metatile_Table:
 Tile_Empty:
