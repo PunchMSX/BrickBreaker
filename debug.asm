@@ -65,8 +65,9 @@ Debug_MapEdit_Init:
 	LDA #OBJ_DEBUG_CHECKERED
 	JSR ObjectList_Insert
 	STX DEBUG_CURSORID
-	LDA #0
+	LDA #1
 	STA DEBUG_CURSORX
+	LDA #3
 	STA DEBUG_CURSORY
 	
 	
@@ -87,13 +88,27 @@ Debug_MapEdit:
 .StartButton
 	LDA CTRLPORT_1
 	AND #CTRL_START
-	BEQ .LeftRight
+	BEQ .SelectButton
 	LDA OLDCTRL_1
 	AND #CTRL_START
-	BNE .LeftRight
+	BNE .SelectButton
 	
 	LDA #STATE_TITLE
 	STA GAME_STATE
+	RTS
+	
+.SelectButton
+	LDA CTRLPORT_1
+	AND #CTRL_SELECT
+	BEQ .LeftRight
+	LDA OLDCTRL_1
+	AND #CTRL_SELECT
+	BNE .LeftRight
+	
+	LDA #OBJ_BALL
+	LDX #128
+	LDY #128
+	JSR ObjectList_Insert ;X and Y aren't needed since the ball randomizes its position on init
 	RTS
 	
 	
@@ -106,8 +121,8 @@ Debug_MapEdit:
 	BNE .UpDown
 	DEC DEBUG_CURSORX
 	LDA DEBUG_CURSORX
-	CMP #$FF
-	BNE .UpDown
+	CMP #COLMAP_EDITABLE_X1
+	BCS .UpDown
 	INC DEBUG_CURSORX ;set cursor X to zero
 	JMP .UpDown
 .right
@@ -119,7 +134,7 @@ Debug_MapEdit:
 	BNE .UpDown
 	INC DEBUG_CURSORX
 	LDA DEBUG_CURSORX
-	CMP #COLMAP_WIDTH
+	CMP #COLMAP_EDITABLE_X2
 	BCC .UpDown
 	DEC DEBUG_CURSORX ;set cursor X to 13
 .UpDown
@@ -131,8 +146,8 @@ Debug_MapEdit:
 	BNE .down
 	DEC DEBUG_CURSORY
 	LDA DEBUG_CURSORY
-	CMP #$FF
-	BNE .buttonB
+	CMP #COLMAP_EDITABLE_Y1
+	BCS .buttonB
 	INC DEBUG_CURSORY ;set cursor X to zero
 	JMP .buttonB
 .down
@@ -144,7 +159,7 @@ Debug_MapEdit:
 	BNE .buttonB
 	INC DEBUG_CURSORY
 	LDA DEBUG_CURSORY
-	CMP #COLMAP_HEIGHT
+	CMP #COLMAP_EDITABLE_Y2
 	BCC .buttonB
 	DEC DEBUG_CURSORY ;set cursor X to 10
 
@@ -159,18 +174,14 @@ Debug_MapEdit:
 	LDA #TILE_BRICK
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
-	CLC
-	ADC #(COLMAP_OFFSETX / 16)
 	STA <CALL_ARGS + 1
 	LDA DEBUG_CURSORY
-	CLC
-	ADC #(COLMAP_OFFSETY / 16)
 	STA <CALL_ARGS + 2
 	JSR PPU_DrawMetatile
 	
 	LDA DEBUG_CURSORY
 	TAY
-	LDA MUL14_Table, y
+	LDA MUL16_Table, y
 	CLC
 	ADC DEBUG_CURSORX
 	TAY
@@ -188,18 +199,14 @@ Debug_MapEdit:
 	LDA #TILE_EMPTY
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
-	CLC
-	ADC #(COLMAP_OFFSETX / 16)
 	STA <CALL_ARGS + 1
 	LDA DEBUG_CURSORY
-	CLC
-	ADC #(COLMAP_OFFSETY / 16)
 	STA <CALL_ARGS + 2
 	JSR PPU_DrawMetatile
 	
 	LDA DEBUG_CURSORY
 	TAY
-	LDA MUL14_Table, y
+	LDA MUL16_Table, y
 	CLC
 	ADC DEBUG_CURSORX
 	TAY
@@ -233,8 +240,6 @@ Debug_MapEdit:
 .updateX
 	LDX DEBUG_CURSORID
 	LDA DEBUG_CURSORX
-	CLC
-	ADC #COLMAP_OFFSETX / 16 ;Playfield is 1 metatile away from border
 	ASL A
 	ASL A
 	ASL A
@@ -268,8 +273,6 @@ Debug_MapEdit:
 .updateY
 	LDX DEBUG_CURSORID
 	LDA DEBUG_CURSORY
-	CLC
-	ADC #COLMAP_OFFSETY / 16  ;Playfield is 3 metatiles away from top
 	ASL A
 	ASL A
 	ASL A

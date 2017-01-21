@@ -55,6 +55,14 @@ So much work done!
 +Some code used to test collisions was done, to positive results.
 +Metasprite reference file (metasprite.msp) file updated to reflect the order in anim.txt
 +Yet another RTS trick subroutine added, this time to switch between game states.
++Collision map size changed to cover whole screen (16 x 15 size four metatiles)
 
 +Testing sprite-to-bg collisions highlighted what was problem with collision bounding boxes, the x2,y2 points are all off by one. Mystery solved and boxes fixed.
 
++Movement faster than 1px needs to calculate position so that the metasprite "touches" the solid tile, not a pixel more, not a pixel less. Done inside the bg overlap routine, stored in COLLISION_OVERLAP!
+
+-Next step: Create logic to reflect balls when touching walls;
+			Create a basic enemy object with AI
+			Create a match game state to make this look like a game already
+			
+11 days left! ! ! ! ! ! ! ! ! ! ! ! ! ! 

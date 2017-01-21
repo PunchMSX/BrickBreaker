@@ -132,6 +132,7 @@ OBJ_COLLISION	.ds OBJ_MAX
 OBJ_INTSTATE1	.ds OBJ_MAX
 OBJ_INTSTATE2	.ds OBJ_MAX
 OBJ_INTSTATE3	.ds OBJ_MAX
+OBJ_INTSTATE4	.ds OBJ_MAX
 
  .org $500
 GAME_STATE		.ds 1
@@ -151,13 +152,17 @@ DEBUG_DECIMALX	.ds 3
 DEBUG_DECIMALY	.ds 3
 
   .org $600
-COLLISION_MAP	 .ds 154 ;(14*11 collision map)
+COLLISION_MAP	 .ds 16 * 15 ;Full screen collision map
 COLLISION_OFFSET .ds 4  ;
-COLLISION_TILES	 .ds 4  ; output from bg overlap subroutine, starts from top left, clockwise
-COLMAP_WIDTH = 14
-COLMAP_HEIGHT = 11
-COLMAP_OFFSETX	= 16 ;Playfield is 16 pixels away from left corner
-COLMAP_OFFSETY  = 32
+COLLISION_OVERLAP .ds 4 ; # pixels overlapping with a bg tile for X and Y axis
+COLMAP_WIDTH = 16
+COLMAP_HEIGHT = 15
+COLMAP_SIZE = 16 * 15
+COLMAP_EDITABLE_X1 = 1
+COLMAP_EDITABLE_X2 = 15
+COLMAP_EDITABLE_Y1 = 2
+COLMAP_EDITABLE_Y2 = 13
+
 
  .code
  .bank 0

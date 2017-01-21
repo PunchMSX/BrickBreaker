@@ -180,6 +180,32 @@ _x2 = TEMP_BYTE + 5
 _y2 = TEMP_BYTE + 6
 _MapOffset = TEMP_BYTE + 7
 
+
+;Ejects object moving from left to right into the tile
+;Right edge of object will be touching the left edge of the tile.
+TouchTile_Right:
+	
+	LDA OBJ_METASPRITE, x
+	ASL A
+	ASL A
+	STA <_BoxOffset
+	
+	;get position of the top right corner
+	TAY
+	LDA MS_Collision_Table + 1, y
+	CLC
+	ADC OBJ_XPOS, x
+	
+	;We need to know how many pixels of the bounding box are inside the tile
+	;We do that by getting the modulo of the position divided by 16.
+	;This is the same as ANDing the first four bits of the position.
+	AND #%00001111
+	SEC
+	SBC OBJ_XPOS, x
+	STA OBJ_XPOS, x
+	
+	RTS
+
 ;Output: Collision results
 Overlap_Background_Small:
 	PHX
@@ -200,8 +226,19 @@ Overlap_Background_Small:
 	LDA OBJ_XPOS, x
 	CLC
 	ADC MS_Collision_Table, y
+	
+	;We need to know how many pixels of the bounding box are inside the tile
+	;We do that by getting the modulo of the position divided by 16.
+	;This is the same as ANDing the first four bits of the position.
+	PHA
+	AND #%00001111
+	STA COLLISION_OVERLAP 
+	LDA #16
 	SEC
-	SBC #COLMAP_OFFSETX ;Playfield starts 16 pixels away from left edge
+	SBC COLLISION_OVERLAP
+	STA COLLISION_OVERLAP
+	PLA
+	
 	LSR A
 	LSR A
 	LSR A
@@ -211,8 +248,12 @@ Overlap_Background_Small:
 	LDA OBJ_XPOS, x
 	CLC
 	ADC MS_Collision_Table + 1, y
-	SEC
-	SBC #COLMAP_OFFSETX ;Playfield starts 16 pixels away from left edge
+	
+	PHA
+	AND #%00001111
+	STA COLLISION_OVERLAP + 1
+	PLA
+	
 	LSR A
 	LSR A
 	LSR A
@@ -223,8 +264,17 @@ Overlap_Background_Small:
 	LDA OBJ_YPOS, x
 	CLC
 	ADC MS_Collision_Table + 2, y
+	
+	;We do the same for the Y axis overlap.
+	PHA
+	AND #%00001111
+	STA COLLISION_OVERLAP + 2
+	LDA #16
 	SEC
-	SBC #COLMAP_OFFSETY ;Playfield starts 48 pixels away from top edge
+	SBC COLLISION_OVERLAP + 2
+	STA COLLISION_OVERLAP + 2
+	PLA
+	
 	LSR A
 	LSR A
 	LSR A
@@ -235,8 +285,12 @@ Overlap_Background_Small:
 	LDA OBJ_YPOS, x
 	CLC
 	ADC MS_Collision_Table + 3, y
-	SEC
-	SBC #COLMAP_OFFSETY ;Playfield starts 48 pixels away from top edge
+
+	PHA
+	AND #%00001111
+	STA COLLISION_OVERLAP  + 3
+	PLA
+	
 	LSR A
 	LSR A
 	LSR A
@@ -244,24 +298,45 @@ Overlap_Background_Small:
 	STA <_y2 ;y1 in the collision map
 	
 .topLeft:
-	LDA MUL14_Table, y ;Simulate y1 * 14
+	;LDA MUL14_Table, y ;Simulate y1 * 14
+	LDY <_y1
+	LDA MUL16_Table, y ;Simulate y1 * 16
 	PHA
 	CLC
 	ADC <_x1
 	STA COLLISION_OFFSET ;Tile where top left of bounding box sits
+	;Compensate for Y axis underflow 
+	CMP #COLMAP_SIZE
+	BCC .topRight
+	CLC
+	ADC #COLMAP_SIZE - 256
+	STA COLLISION_OFFSET
 	
 .topRight
 	PLA
 	CLC
 	ADC <_x2
 	STA COLLISION_OFFSET + 1
+	;Compensate for Y axis underflow 
+	CMP #COLMAP_SIZE
+	BCC .bottomLeft
+	CLC
+	ADC #COLMAP_SIZE - 256
+	STA COLLISION_OFFSET + 1
 	
 .bottomLeft:
 	LDY <_y2
-	LDA MUL14_Table, y
+	LDA MUL16_Table, y
+	;LDA MUL14_Table, y
 	PHA
 	CLC
 	ADC <_x1
+	STA COLLISION_OFFSET + 2
+	;Compensate for Y axis overflow 
+	CMP #COLMAP_SIZE
+	BCC .bottomRight
+	SEC
+	SBC #COLMAP_SIZE
 	STA COLLISION_OFFSET + 2
 	
 .bottomRight
@@ -269,11 +344,20 @@ Overlap_Background_Small:
 	CLC
 	ADC <_x2
 	STA COLLISION_OFFSET + 3
+
+	;Compensate for Y axis overflow 
+	;(if the box is top half on bottom, bottom half on top, index will be larger than the collision map size)
+	CMP #COLMAP_SIZE
+	BCC .end
+	SEC
+	SBC #COLMAP_SIZE
+	STA COLLISION_OFFSET + 3
 	
+.end
 	PLX
 	RTS
 	
-MUL14_Table:
+;MUL14_Table:
 	.db 0
 	.db 14
 	.db 14 * 2

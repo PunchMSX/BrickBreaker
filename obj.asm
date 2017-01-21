@@ -33,38 +33,143 @@ ObjectInit_Table:
 	.dw _OBJ_Ball_Init - 1
 	
 _OBJ_Ball_Init:
+	LDA #0
+	STA OBJ_METASPRITE, x
+	
 .gen
 	JSR RNG_Next
-	AND #%00000110
-	SEC
-	SBC #4
+	AND #%00000011
+	BEQ .gen
 	STA SpeedX, x
-	
+.gen2	
 	JSR RNG_Next
-	SEC
-	SBC #4
-	AND #%00000110
+	AND #%00000011
+	BEQ .gen2
 	STA SpeedY, x
 	
-	BNE .end
+	JSR RNG_Next
+	AND #%00000001
+	BEQ .end
 	LDA SpeedX, x
-	BEQ .gen ;If both speed values are 0, retry.
+	NEG
+	STA SpeedX, x
+	JMP .end
+.gen4
+	JSR RNG_Next
+	AND #%00000001
+	BEQ .end
+	LDA SpeedY, x
+	NEG
+	STA SpeedY, x
+	
 .end
-
+	RTS
+	
+	
 _OBJ_Ball:
 	LDA OBJ_XPOS, x
-	STA OBJ_INTSTATE1, x
+	STA OBJ_INTSTATE3, x
 	LDA OBJ_YPOS, x
-	STA OBJ_INTSTATE2, x ;Backup original X,Y position
+	STA OBJ_INTSTATE4, x ;Backup original X,Y position
 	
 .LeftRight
 	;Determine the current direction in the X axis
-	LDA OBJ_XPOS, x
+	LDA SpeedX, x
 	BMI .left
 .right
-	CLC
-	ADC SpeedX, x
+		CLC
+		ADC OBJ_XPOS, x
+		STA OBJ_XPOS, x
+		
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
+		LDY COLLISION_OFFSET + 1
+		LDA COLLISION_MAP, y
+		BNE .horizCol
+		LDY COLLISION_OFFSET + 3
+		LDA COLLISION_MAP, y
+		BNE .horizCol
+		JMP .UpDown
 .left
+		CLC
+		ADC OBJ_XPOS, x
+		STA OBJ_XPOS, x
+		
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
+		LDY COLLISION_OFFSET + 0
+		LDA COLLISION_MAP, y
+		BNE .horizCol
+		LDY COLLISION_OFFSET + 2
+		LDA COLLISION_MAP, y
+		BNE .horizCol
+		JMP .UpDown
+	
+.horizCol ;This will look silly for movements greater than 1px, see scrapbook.txt
+		LDA OBJ_XPOS, x
+		CMP OBJ_INTSTATE3, x
+		BCS .lr
+		CLC
+		ADC COLLISION_OVERLAP
+		STA OBJ_XPOS, x		;Restore previous position if collision happened
+
+		JMP .UpDown
+.lr
+		SEC
+		SBC COLLISION_OVERLAP + 1
+		STA OBJ_XPOS, x
+		DEC OBJ_XPOS, x
+		
+.UpDown
+	;Determine the current direction in the X axis
+	LDA SpeedY, x
+	BMI .up
+.down
+		CLC
+		ADC OBJ_YPOS, x
+		STA OBJ_YPOS, x
+		
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
+		LDY COLLISION_OFFSET + 2
+		LDA COLLISION_MAP, y
+		BNE .vertCol
+		LDY COLLISION_OFFSET + 3
+		LDA COLLISION_MAP, y
+		BNE .vertCol
+		JMP .endCol
+.up
+		CLC
+		ADC OBJ_YPOS, x
+		STA OBJ_YPOS, x
+		
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
+		LDY COLLISION_OFFSET + 0
+		LDA COLLISION_MAP, y
+		BNE .vertCol
+		LDY COLLISION_OFFSET + 1
+		LDA COLLISION_MAP, y
+		BNE .vertCol
+		JMP .endCol
+	
+.vertCol ;This will look silly for movements greater than 1px, see scrapbook.txt
+		LDA OBJ_YPOS, x
+		CMP OBJ_INTSTATE4, x
+		BCS .ud
+		CLC
+		ADC COLLISION_OVERLAP + 2
+		STA OBJ_YPOS, x		;Restore previous position if collision happened
+		
+		JMP .endCol
+.ud
+		SEC
+		SBC COLLISION_OVERLAP + 3
+		STA OBJ_YPOS, x
+		DEC OBJ_YPOS, x
+		
+.endCol
+	RTS
 	
 	
 _OBJ_Debug_Checkered_Init:
@@ -92,32 +197,22 @@ _OBJ_Debug_Checkered_Small:
 	LDA CTRLPORT_1
 	AND #CTRL_LEFT
 	BEQ .right
-	LDA #1
-	STA OBJ_INTSTATE3, x ;Direction
 	LDA OBJ_XPOS, x
 	SEC
 	SBC #1
 	STA OBJ_XPOS, x
-	CMP #16
-	BCS .HorizColdetLeft
-	LDA OBJ_INTSTATE1, x
-	STA OBJ_XPOS, x ;restore X position if collides with wall
-	JMP .UpDown
+	JMP .HorizColdetLeft
+	
 .right
 	LDA CTRLPORT_1
 	AND #CTRL_RIGHT
 	BEQ .UpDown
-	LDA #2
-	STA OBJ_INTSTATE3, x ;Direction
+
 	LDA OBJ_XPOS, x
 	CLC
 	ADC #1
 	STA OBJ_XPOS, x
-	CMP #232
-	BCC .HorizColdetRight
-	LDA OBJ_INTSTATE1, x
-	STA OBJ_XPOS, x ;restore X position if collides with wall
-	JMP .UpDown
+	JMP .HorizColdetRight
 	
 .HorizColdetLeft
 	JSR Overlap_Background_Small
@@ -294,11 +389,13 @@ _OBJ_Intro_Ball:
 	CLC
 	ADC OBJ_XPOS, x
 	STA OBJ_XPOS, x
+	JSR Overlap_Background_Small
 .movev
 	LDA SpeedY, x
 	CLC
 	ADC OBJ_YPOS, x
 	STA OBJ_YPOS, x
+	JSR Overlap_Background_Small
 	
 .animate
 	LDA #0
