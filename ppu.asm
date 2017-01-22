@@ -6,6 +6,7 @@ PPU_RLE = 1
 PPU_SQREPEAT = 2
 PPU_METATILE = 3
 PPU_NUMBER_8 = 4
+PPU_NUMBER_100 = 5
 
 PPU_Command_Table:
 	.dw _PPU_Idle - 1
@@ -13,6 +14,7 @@ PPU_Command_Table:
 	.dw _PPU_SqRepeat - 1
 	.dw _PPU_DrawMetatile - 1
 	.dw _PPU_Draw8bitNumber - 1
+	.dw _PPU_DrawBase100Number - 1
 	
 PPU_MAXWRITES = 8 ;Maximum # of bytes to be written during VBlank, conservative guess.
 
@@ -108,6 +110,44 @@ _PPU_Idle:
 	RTS
 	
 ;Draws a 8 bit number in decimal form
+;(2 byte PPU address, 2 bytes # to be drawn)
+_PPU_DrawBase100Number:
+	LDA PPU_NUMWRITES
+	CMP #PPU_MAXWRITES - 3
+	BCC .start
+	RTS	;Too many writes, wait for next frame.
+.start
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR3
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR4
+	
+	;JSR PPU_Queue1_Retrieve
+	;STA <PPU_QR1
+	;JSR PPU_Queue1_Retrieve
+	;STA <PPU_QR2
+	
+	LDA $2002
+	LDA <PPU_QR4
+	STA $2006
+	LDA <PPU_QR3
+	STA $2006
+	
+	JSR PPU_Queue1_Retrieve
+	CLC
+	ADC #$30
+	STA $2007
+	
+	JSR PPU_Queue1_Retrieve
+	CLC
+	ADC #$30
+	STA $2007
+	
+	
+	JSR PPU_AllowStep
+	RTS
+	
+;Draws a 8 bit number in decimal form
 ;(3 byte decimal address, PPU Address)
 _PPU_Draw8bitNumber:
 	LDA PPU_NUMWRITES
@@ -137,7 +177,7 @@ _PPU_Draw8bitNumber:
 	LDA [PPU_QR1], y
 	CLC
 	ADC #$30
-	CMP #$30
+	CMP #$30	;Check if zero, don't draw if precedes first nonzero.
 	BNE .write
 	CPX #0
 	BNE .write

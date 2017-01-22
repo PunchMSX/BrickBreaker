@@ -105,20 +105,35 @@ _OBJ_Ball:
 		BNE .horizCol
 		JMP .UpDown
 	
-.horizCol ;This will look silly for movements greater than 1px, see scrapbook.txt
+.horizCol ;Reflection works as following:
+		  ; 1- find out how much is the object embedded in the solid tile (collision_overlap)
+		  ; 2- move the object back so it touches the solid tile (add/sub the position with the value from 1)
+		  ; 3- invert the speed in the axis being evaluated
+		  ; (reflecting in the same run requires more collision detection checks, dangerous infinite loops may occur?)
 		LDA OBJ_XPOS, x
 		CMP OBJ_INTSTATE3, x
 		BCS .lr
 		CLC
 		ADC COLLISION_OVERLAP
 		STA OBJ_XPOS, x		;Restore previous position if collision happened
+		
+		;Reflect
+		LDA SpeedX, x
+		NEG
+		STA SpeedX, x
 
 		JMP .UpDown
 .lr
+		;Touch Wall
 		SEC
 		SBC COLLISION_OVERLAP + 1
 		STA OBJ_XPOS, x
 		DEC OBJ_XPOS, x
+		
+		;Reflect
+		LDA SpeedX, x
+		NEG
+		STA SpeedX, x
 		
 .UpDown
 	;Determine the current direction in the X axis
@@ -153,7 +168,7 @@ _OBJ_Ball:
 		BNE .vertCol
 		JMP .endCol
 	
-.vertCol ;This will look silly for movements greater than 1px, see scrapbook.txt
+.vertCol ;Same as horizontal collision detection
 		LDA OBJ_YPOS, x
 		CMP OBJ_INTSTATE4, x
 		BCS .ud
@@ -161,12 +176,22 @@ _OBJ_Ball:
 		ADC COLLISION_OVERLAP + 2
 		STA OBJ_YPOS, x		;Restore previous position if collision happened
 		
+		;Reflect
+		LDA SpeedY, x
+		NEG
+		STA SpeedY, x
+		
 		JMP .endCol
 .ud
 		SEC
 		SBC COLLISION_OVERLAP + 3
 		STA OBJ_YPOS, x
 		DEC OBJ_YPOS, x
+		
+		;Reflect
+		LDA SpeedY, x
+		NEG
+		STA SpeedY, x
 		
 .endCol
 	RTS

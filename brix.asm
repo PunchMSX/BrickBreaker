@@ -137,11 +137,16 @@ OBJ_INTSTATE4	.ds OBJ_MAX
  .org $500
 GAME_STATE		.ds 1
 GAME_OLDSTATE 	.ds 1
+GAME_TRANSITION	.ds 1
 
 INTRO_BULLETQ 	.ds 1
 INTRO_CHARQ		.ds 1
 INTRO_TIMER		.ds 1
 INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro at frame intervals.
+
+GAME_HISCORES	.ds 2 * 5 ;2 base-100 bytes per score
+GAME_INITIALS	.ds 3 * 5 ;Three letters per score
+
 
 DEBUG_CURSORID	.ds 1
 DEBUG_CURSORX	.ds 1
@@ -267,6 +272,31 @@ ConvertToDecimal:
 	STA <TEMP_BYTE + 2
 	RTS
 	
+;Output: TEMP_BYTE (2) = decimal digits
+;Input: A (number to be converted from 0-99)
+Base100ToDecimal:
+	LDX #0
+	STX <TEMP_BYTE
+	STX <TEMP_BYTE + 1
+
+	CMP #100
+	BCC .get10
+;Error, non base 100 number given as parameter
+	LDA #$FF
+	STA <TEMP_BYTE
+	STA <TEMP_BYTE + 1
+	RTS
+
+.get10
+	CMP #10
+	BCC .get1
+	SBC #10
+	INC <TEMP_BYTE
+	JMP .get10
+.get1
+	STA <TEMP_BYTE + 1
+	RTS
+	
 waitPPU:
 	BIT $2002
 	BPL waitPPU
@@ -338,8 +368,10 @@ RESET:
 	
 	JSR ObjectList_Init	;Run this only once
 	JSR PPU_InitQueues
+	JSR HiScores_Init
 	
-	;JSR Debug_MapEdit_Init
+	LDA #TRUE
+	STA GAME_TRANSITION
 	
 ;*********************************************
 	
@@ -430,6 +462,8 @@ bg_Title_Screen:
 	.incbin "art/title.rle"
 bg_Playfield:
 	.incbin "art/playfield.rle"
+bg_HighScore:
+	.incbin "art/hiscore.rle"
 	
  .org $FFFA
 	 .dw NMI

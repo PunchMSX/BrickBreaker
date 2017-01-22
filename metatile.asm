@@ -1,5 +1,6 @@
 ;metatile.asm
 
+TILE_BORDER = 255
 TILE_EMPTY = 0
 TILE_RUBBLE = 1
 TILE_BRICK = 2

@@ -66,3 +66,12 @@ So much work done!
 			Create a match game state to make this look like a game already
 			
 11 days left! ! ! ! ! ! ! ! ! ! ! ! ! ! 
+
+21/01
++Reflection when colliding with BG done
++High score table and related functions done.
+
+-A string draw function with length as a parameter would been nice.
+-We need at least a PPU attribute upload function...
+
+10 days left.

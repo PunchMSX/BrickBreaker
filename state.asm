@@ -9,6 +9,7 @@ State_Table:
 	.dw _OPC_Delay - 1
 	.dw _OPC_DrawRLE - 1
 	.dw _OPC_DrawSquare - 1
+	.dw _OPC_DrawNumber100 - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -17,7 +18,8 @@ OPC_Error = 1
 OPC_Delay = 2
 OPC_DrawRLE = 3
 OPC_DrawSquare = 4
-OPC_Invalid = 5
+OPC_DrawNumber100 = 5
+OPC_Invalid = 6
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -132,6 +134,41 @@ _OPC_Delay:
 	BCC .exit
 	JSR Interpreter_AllowStep
 .exit
+	RTS
+	
+;PPU Address, Number Address (1byte)
+_OPC_DrawNumber100:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least 5 slots to work
+	
+	LDA #PPU_NUMBER_100
+	JSR PPU_Queue1_Insert
+	
+	;PPU address
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	LPC
+	STA <INT_R1
+	LPC
+	STA <INT_R2
+	
+	LDY #0
+	LDA [INT_R1], y
+	JSR Base100ToDecimal
+	
+	LDA <TEMP_BYTE
+	JSR PPU_Queue1_Insert
+	LDA <TEMP_BYTE + 1
+	JSR PPU_Queue1_Insert
+	
+	
+	JSR Interpreter_AllowStep
+	
+.fail
 	RTS
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)

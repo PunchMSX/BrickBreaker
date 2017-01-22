@@ -180,32 +180,6 @@ _x2 = TEMP_BYTE + 5
 _y2 = TEMP_BYTE + 6
 _MapOffset = TEMP_BYTE + 7
 
-
-;Ejects object moving from left to right into the tile
-;Right edge of object will be touching the left edge of the tile.
-TouchTile_Right:
-	
-	LDA OBJ_METASPRITE, x
-	ASL A
-	ASL A
-	STA <_BoxOffset
-	
-	;get position of the top right corner
-	TAY
-	LDA MS_Collision_Table + 1, y
-	CLC
-	ADC OBJ_XPOS, x
-	
-	;We need to know how many pixels of the bounding box are inside the tile
-	;We do that by getting the modulo of the position divided by 16.
-	;This is the same as ANDing the first four bits of the position.
-	AND #%00001111
-	SEC
-	SBC OBJ_XPOS, x
-	STA OBJ_XPOS, x
-	
-	RTS
-
 ;Output: Collision results
 Overlap_Background_Small:
 	PHX
@@ -356,19 +330,54 @@ Overlap_Background_Small:
 .end
 	PLX
 	RTS
+
+;Writes unbreakable tiles around the playfield
+CollisionMap_DefaultBorder:
+	LDA #TILE_BORDER
+	LDX #0
+.loop1
+	STA COLLISION_MAP, x
+	INX
+	CPX #32
+	BNE .loop1
 	
-;MUL14_Table:
-	.db 0
-	.db 14
-	.db 14 * 2
-	.db 14 * 3
-	.db 14 * 4
-	.db 14 * 5
-	.db 14 * 6
-	.db 14 * 7
-	.db 14 * 8
-	.db 14 * 9
-	.db 14 * 10
+	
+	LDA #HIGH(COLLISION_MAP + 32)
+	STA <TEMP_BYTE + 1
+	LDA #LOW(COLLISION_MAP + 32)
+	STA <TEMP_BYTE
+	
+
+	LDX #0
+.loop2
+	LDA #TILE_BORDER
+	LDY #0
+	STA [TEMP_BYTE], y
+	LDY #15
+	STA [TEMP_BYTE], y
+
+	LDA #16
+	CLC
+	ADC <TEMP_BYTE
+	STA <TEMP_BYTE
+	LDA <TEMP_BYTE + 1
+	ADC #0
+	STA <TEMP_BYTE + 1
+	
+	INX
+	CPX #11
+	BNE .loop2
+	
+	LDX #0
+	LDA #TILE_BORDER
+.loop3
+	STA COLLISION_MAP + ( 16 * 13 ), x
+	INX
+	CPX #32
+	BNE .loop3
+	
+	RTS
+	
 	
 MUL16_Table:
 	.db 0

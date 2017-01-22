@@ -1,6 +1,5 @@
 ;gamestate.asm
 
-STATE_PAUSE	= 0
 STATE_TITLE = 1
 STATE_HISCORE = 2
 STATE_GAME = 3
@@ -13,12 +12,19 @@ STATE_CREDITS = 9
 STATE_DEBUG_MAP = 10
 STATE_DEBUG_COLLISION = 11
 STATE_ERROR = 12
-
+	
+GameState_Change:
+	LDX GAME_STATE
+	STX GAME_OLDSTATE
+	STA GAME_STATE
+	LDA #TRUE
+	STA GAME_TRANSITION
+	RTS
 
 GameState_Table:
-	.dw 0 ;pause
+	.dw 0
 	.dw Title_Loop - 1 ;titlescr.asm
-	.dw 0 ;hiscore
+	.dw State_HighScore - 1 ;titlescr.asm
 	.dw 0 ;game
 	.dw 0 ;puzzlegame
 	.dw 0 ;gameover
@@ -31,9 +37,9 @@ GameState_Table:
 	.dw 0 ;error handler	
 	
 GameStateInit_Table:
-	.dw 0 ;pause
+	.dw 0
 	.dw Title_Init - 1 ;titlescr.asm
-	.dw 0 ;hiscore
+	.dw State_HiScore_Init - 1 ;titlescr.asm
 	.dw 0 ;game
 	.dw 0 ;puzzlegame
 	.dw 0 ;gameover
@@ -49,8 +55,9 @@ GameStateManager:
 	LDA GAME_STATE
 	CMP #STATE_ERROR
 	BCS .error	;if the state is invalid
-	CMP GAME_OLDSTATE
-	BEQ .continue
+	LDA GAME_TRANSITION
+	CMP #TRUE
+	BNE .continue
 	
 .new
 	JSR PPU_Queue1_Reset ;Clears PPU job queue
@@ -59,14 +66,14 @@ GameStateManager:
 	LDA GAME_STATE
 	JSI GameStateInit_Table
 	
-	LDA GAME_STATE
+	LDA #FALSE
+	STA GAME_TRANSITION
 
 .continue
-	STA GAME_OLDSTATE
+	LDA GAME_STATE
 	JSI GameState_Table
 	
 	RTS
 	
 .error
 	RTS
-	

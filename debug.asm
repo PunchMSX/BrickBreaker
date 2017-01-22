@@ -30,7 +30,7 @@ Debug_RLEText3:
 	.db 1, 0
 
 Debug_StateMachine0:
-	.db OPC_DrawSquare, $0D, 32, 30
+	.db OPC_DrawSquare, $40, 32, 30
 	.dw $2000
 	
 	.db OPC_Delay, 60
@@ -38,7 +38,7 @@ Debug_StateMachine0:
 	.db OPC_DrawRLE
 	.dw $2000, bg_Playfield
 	
-	.db OPC_DrawSquare, $20, 28, 3
+	.db OPC_DrawSquare, $40, 28, 3
 	.dw $2342
 	
 	.db OPC_DrawRLE
@@ -75,6 +75,8 @@ Debug_MapEdit_Init:
 	LDY #96
 	LDA #OBJ_DEBUG_CHECKERED_SMALL
 	JSR ObjectList_Insert
+	
+	JSR CollisionMap_DefaultBorder
 	RTS
 	
 Debug_MapEdit:
@@ -94,7 +96,7 @@ Debug_MapEdit:
 	BNE .SelectButton
 	
 	LDA #STATE_TITLE
-	STA GAME_STATE
+	JSR GameState_Change
 	RTS
 	
 .SelectButton
