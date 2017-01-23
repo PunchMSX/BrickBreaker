@@ -92,8 +92,6 @@ CPUADDR_NAM .ds 2 ;Address in PPU memory for the Background/Attributes
 CPUADDR_ATR .ds 2
 
 PPU_DRAW 	.ds 1
-RLE_MAXBYTES = 20
-SQREPEAT_MAXBYTES = 12
 
 PPU_COMMAND	.ds 1 ;Current command undergoing execution by the NMI thread.
 

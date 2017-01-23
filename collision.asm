@@ -378,6 +378,39 @@ CollisionMap_DefaultBorder:
 	
 	RTS
 	
+;Uploads the top half of the playfield collision map.
+;Call_Args (2bytes) = collision data address
+CollisionMap_UploadTop:	
+	LDY #0
+	LDX #0
+.loop
+	LDA [CALL_ARGS], y
+	STA COLLISION_MAP + 48 + 1, x
+	
+	INX
+	CPX #$3E
+	BCS .end
+	
+	INY
+	CPY #14
+	BCC .loop ;All bytes written
+	
+	INX
+	INX
+	
+	LDA <CALL_ARGS
+	CLC
+	ADC #14
+	STA <CALL_ARGS
+	LDA <CALL_ARGS + 1
+	ADC #0
+	STA <CALL_ARGS + 1
+	
+	LDY #0
+	jMP .loop
+	
+.end
+	RTS
 	
 MUL16_Table:
 	.db 0

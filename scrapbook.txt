@@ -75,3 +75,11 @@ So much work done!
 -We need at least a PPU attribute upload function...
 
 10 days left.
+
+22/02
++String draw functionality done!
++Game screen redesigned
++Instructions written
++Skeleton for match game state done
+
+9 days left...

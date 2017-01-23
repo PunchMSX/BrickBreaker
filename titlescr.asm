@@ -77,13 +77,22 @@ Hiscore_StateMachine:
 	.db OPC_DrawRLE
 	.dw $2315, Text_00
 	
-
-	
 	.db OPC_Halt
 	
 
 State_HighScore:
 	JSR State_Interpreter
+	
+	LDA CTRLPORT_1
+	AND #CTRL_START
+	BEQ .end
+	LDA OLDCTRL_1
+	AND #CTRL_START
+	BNE .end
+	
+	LDA #STATE_GAME
+	JSR GameState_Change
+.end
 	RTS
 	
 	
@@ -91,6 +100,7 @@ State_HiScore_Init:
 	LDX #LOW(Hiscore_StateMachine)
 	LDY #HIGH(Hiscore_StateMachine)
 	JSR State_Interpreter_Init
+	
 	RTS
 	
 ;******************************************************************

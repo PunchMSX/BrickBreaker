@@ -10,6 +10,8 @@ State_Table:
 	.dw _OPC_DrawRLE - 1
 	.dw _OPC_DrawSquare - 1
 	.dw _OPC_DrawNumber100 - 1
+	.dw _OPC_DrawString - 1
+	.dw _OPC_DrawMetatileRow - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -19,7 +21,9 @@ OPC_Delay = 2
 OPC_DrawRLE = 3
 OPC_DrawSquare = 4
 OPC_DrawNumber100 = 5
-OPC_Invalid = 6
+OPC_DrawString = 6
+OPC_DrawMetatileRow = 7
+OPC_Invalid = 8
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -134,6 +138,56 @@ _OPC_Delay:
 	BCC .exit
 	JSR Interpreter_AllowStep
 .exit
+	RTS
+	
+;Schedules a metatile row draw.
+;PPU Address, Metatile Address, Row Size
+_OPC_DrawMetatileRow:
+	JSR PPU_Queue1_Capacity
+	CMP #6
+	BCC .fail ;Needs at least 6 slots to work
+
+	LDA #PPU_METATILEROW
+	JSR PPU_Queue1_Insert
+	
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	JSR Interpreter_AllowStep
+	
+.fail
+	RTS	
+;Schedules a string draw.
+;PPU address, String address (4bytes)
+_OPC_DrawString:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least 5 slots to work
+
+	LDA #PPU_DRAWSTRING
+	JSR PPU_Queue1_Insert
+	
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	JSR Interpreter_AllowStep
+	
+.fail
 	RTS
 	
 ;PPU Address, Number Address (1byte)

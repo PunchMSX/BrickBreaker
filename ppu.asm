@@ -7,6 +7,8 @@ PPU_SQREPEAT = 2
 PPU_METATILE = 3
 PPU_NUMBER_8 = 4
 PPU_NUMBER_100 = 5
+PPU_DRAWSTRING = 6
+PPU_METATILEROW = 7
 
 PPU_Command_Table:
 	.dw _PPU_Idle - 1
@@ -15,8 +17,14 @@ PPU_Command_Table:
 	.dw _PPU_DrawMetatile - 1
 	.dw _PPU_Draw8bitNumber - 1
 	.dw _PPU_DrawBase100Number - 1
+	.dw _PPU_DrawString - 1
+	.dw _PPU_DrawMetatileRow - 1
 	
 PPU_MAXWRITES = 8 ;Maximum # of bytes to be written during VBlank, conservative guess.
+RLE_MAXBYTES = 20
+SQREPEAT_MAXBYTES = 16
+STRING_MAXBYTES = 16
+METATILE_MAXBYTES = 16
 
 PPU_QueueInterpreter:
 	LDA #0
@@ -106,6 +114,234 @@ PPU_DrawNumber:
 	RTS
 	
 _PPU_Idle:
+	JSR PPU_AllowStep
+	RTS
+	
+;Draws a row of metatiles.
+;PPU Address, Metatile address, Row Size (5 bytes total)
+_PPU_DrawMetatileRow:
+	LDA PPU_NUMWRITES
+	BEQ .start
+	RTS ;Quit if there were writes before this command, execute next vblank.
+.start
+	LDA <PPU_QR1
+	BNE .cont
+.1stSetup
+	;PPU Address
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM + 1
+	
+	;Metatile Address
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR2
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR3 
+	
+	;Row size
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR1
+
+	;Write progress
+	LDA #0
+	STA <PPU_QR5
+	
+	;INC <PPU_QR1
+.cont
+	LDA #METATILE_MAXBYTES / 4
+	STA <PPU_QR4 ;# of metatiles to be written
+	
+	LDA $2002
+	
+	LDA <PPU_QR5
+	ASL A
+	CLC
+	ADC PPUADDR_NAM
+	PHA
+	
+	LDA PPUADDR_NAM + 1
+	ADC #0
+	STA $2006
+	PLA
+	STA $2006
+	
+	LDY <PPU_QR5 ;# of metatiles already copied
+.loop1 ;writes 1st tile row
+	;Load metatile data
+	LDA [PPU_QR2], y
+	CMP #128
+	BCS .exit
+	ASL A
+	ASL A
+	TAX
+	
+	LDA Metatile_Table, x
+	STA $2007
+	LDA Metatile_Table + 1, x
+	STA $2007
+	
+	INY
+	CPY <PPU_QR1
+	BEQ .loop1end
+	
+	DEC <PPU_QR4
+	BNE .loop1
+	
+.loop1end
+	LDA #METATILE_MAXBYTES / 4
+	STA <PPU_QR4 ;# of metatiles to be written
+	
+	LDA #0
+	STA <PPU_QR6
+	
+	LDA $2002
+	
+	LDA <PPU_QR5
+	ASL A
+	CLC
+	ADC PPUADDR_NAM
+	ROL <PPU_QR6 ;saves carry
+	ADC #$20
+	PHA
+	
+	LDA PPUADDR_NAM + 1
+	ADC <PPU_QR6
+	STA $2006
+	
+	PLA
+	STA $2006
+	
+	LDY <PPU_QR5 ;# of metatiles already copied
+.loop2 ;writes 2nd tile row
+	;Load metatile data
+	LDA [PPU_QR2], y
+	ASL A
+	ASL A
+	TAX
+	
+	LDA Metatile_Table + 2, x
+	STA $2007
+	LDA Metatile_Table + 3, x
+	STA $2007
+	
+	INY
+	CPY <PPU_QR1
+	BEQ .exit
+	DEC <PPU_QR4
+	BNE .loop2
+	
+.pause
+	STY <PPU_QR5
+	RTS
+	
+.exit
+	JSR PPU_AllowStep
+	RTS
+	
+CHAR_NEWLINE = $26 ;& character denotes newline
+CHAR_ENDSTR	= 0
+
+;Draws a 0 terminated string.
+;(2 byte PPU address, 2 byte String address)
+_PPU_DrawString:
+	LDA PPU_NUMWRITES
+	BEQ .start
+	RTS ;Quit if there were writes before this command, execute next vblank.
+.start
+	LDA <PPU_QR1
+	BNE .cont
+.1stSetup
+	;PPU Address
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM + 1
+	
+	;String Address
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR2
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR3 
+	
+	LDA #0
+	STA <PPU_QR5 ;y index
+	
+	INC <PPU_QR1
+	
+.cont
+	LDA #STRING_MAXBYTES
+	STA <PPU_QR4
+	
+	LDY <PPU_QR5 ;# of bytes already written
+	
+.ready
+	TYA
+	CLC
+	ADC PPUADDR_NAM
+	PHA ;Stores the base address + how many bytes we've wrote last run
+	
+	LDA $2002
+	
+	LDA PPUADDR_NAM + 1
+	ADC #0
+	STA $2006
+	
+	PLA
+	STA $2006
+	
+.write
+	LDA [PPU_QR2], y
+	
+	BEQ .end
+	CMP #CHAR_NEWLINE
+	BEQ .newline
+	
+	STA $2007
+	
+	DEC <PPU_QR4
+	BEQ .pause ;PPU_QR4 = 0 -> too many writes in one vblank
+	
+	INY
+	BNE .write
+	INC <PPU_QR3 ;If overflow, increase address by 256
+	JMP .write
+	
+.newline
+	;Update PPU base address
+	LDA PPUADDR_NAM
+	CLC
+	ADC #$20
+	STA PPUADDR_NAM
+	LDA PPUADDR_NAM + 1
+	ADC #0
+	STA PPUADDR_NAM + 1
+	
+	;Update CPU base address and reset Y to zero.
+	INY
+	TYA
+	CLC
+	ADC <PPU_QR2
+	STA <PPU_QR2 ;Updates address to point to
+	LDA <PPU_QR3 ;next char in the string.
+	ADC #0
+	STA <PPU_QR3
+	
+	
+	
+	LDY #0
+	JMP .ready
+	
+.pause
+	INY
+	BNE .pause2
+	INC <PPU_QR3
+.pause2
+	STY <PPU_QR5 ;save # of writes for later
+	
+	RTS
+	
+.end
 	JSR PPU_AllowStep
 	RTS
 	
