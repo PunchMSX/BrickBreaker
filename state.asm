@@ -12,6 +12,8 @@ State_Table:
 	.dw _OPC_DrawNumber100 - 1
 	.dw _OPC_DrawString - 1
 	.dw _OPC_DrawMetatileRow - 1
+	.dw _OPC_RAMWrite - 1
+	.dw _OPC_InsertMetasprite - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -23,7 +25,9 @@ OPC_DrawSquare = 4
 OPC_DrawNumber100 = 5
 OPC_DrawString = 6
 OPC_DrawMetatileRow = 7
-OPC_Invalid = 8
+OPC_RAMWrite = 8
+OPC_InsertMetasprite = 9
+OPC_Invalid = 10
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -138,6 +142,42 @@ _OPC_Delay:
 	BCC .exit
 	JSR Interpreter_AllowStep
 .exit
+	RTS
+	
+;RAM Address to save index #, MSP #, X, Y
+_OPC_InsertMetasprite:
+	LPC
+	STA <INT_R1
+	LPC
+	STA <INT_R2
+	LPC
+	PHA
+	LPC
+	TAX
+	LPC
+	TAY
+	PLA
+	
+	JSR ObjectList_Insert
+	LDY #0
+	TXA
+	STA [INT_R1], y
+	
+	JSR Interpreter_AllowStep
+	RTS
+	
+;Writes value to RAM.	
+;RAM Address, Value
+_OPC_RAMWrite:
+	LPC
+	STA <INT_R1
+	LPC
+	STA <INT_R2
+	LPC
+	LDY #0
+	STA [INT_R1], y
+	
+	JSR Interpreter_AllowStep
 	RTS
 	
 ;Schedules a metatile row draw.

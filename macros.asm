@@ -16,6 +16,7 @@
 	.fail
  .endif
 	DEC \1
+	LDA \1
 	CMP #$FF
 	BNE .exit\@
 	DEC \1 + 1

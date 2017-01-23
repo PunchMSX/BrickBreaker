@@ -137,10 +137,25 @@ GAME_STATE		.ds 1
 GAME_OLDSTATE 	.ds 1
 GAME_TRANSITION	.ds 1
 
+MATCH_LEVEL		.ds 1 ;Current match # (level id), 0 for first run.
+
 INTRO_BULLETQ 	.ds 1
 INTRO_CHARQ		.ds 1
 INTRO_TIMER		.ds 1
 INTRO_SPAWN_TMR .ds 2 ;Will only spawn objects in intro at frame intervals.
+INTRO_SHOWSCORE	.ds 1
+
+INSTRUCT_PLAYER .ds 1
+INSTRUCT_ARROWS .ds 1 ;IDs for placeholder characters for the instruction screen(s?)
+INSTRUCT_BALL	.ds 1
+
+INSTRUCT_SYNC	.ds 1
+INSTRUCT_AIM1 = 1
+INSTRUCT_AIM2 = 2
+INSTRUCT_AIM3 = 3
+INSTRUCT_FIRE = 4
+INSTRUCT_KILLBALL = 5
+INSTRUCT_END = 6
 
 GAME_HISCORES	.ds 2 * 5 ;2 base-100 bytes per score
 GAME_INITIALS	.ds 3 * 5 ;Three letters per score
@@ -184,6 +199,7 @@ COLMAP_EDITABLE_Y2 = 13
 	
 	.include "titlescr.asm"
 	.include "debug.asm"
+	.include "instructions.asm"
 	
 	.include "state.asm"
 	

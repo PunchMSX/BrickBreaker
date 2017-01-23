@@ -82,4 +82,14 @@ So much work done!
 +Instructions written
 +Skeleton for match game state done
 
+23/02
++State machine opcode for writing a value at a ram address added for sync.
++Fixed bug in DEC16 macro that made the State_Interpreter fail depending on the phase of the moon (if the initial state machine address' low byte was exactly 00 it would fail to account for the underflow.)
++Added instructional game state
++Added coherent state transitions, now title screen cycles between itself and the high score table until start is pressed.
+
+-Todo: When the level value is 0, go to instruction state. The instrction state will then go back to the match state after it's done, setting the level value to 1.
+	A gameover will set the level value to 1 so it doesn't repeat the instruction screen until the game is reset.
+	The level value must persist (ie not be reset) during state changes.
+
 9 days left...

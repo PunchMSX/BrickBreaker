@@ -1,5 +1,6 @@
 ;gamestate.asm
 
+STATE_INSTRUCTIONS = 0
 STATE_TITLE = 1
 STATE_HISCORE = 2
 STATE_GAME = 3
@@ -22,7 +23,7 @@ GameState_Change:
 	RTS
 
 GameState_Table:
-	.dw 0
+	.dw State_Instructions - 1 ;instructions.asm
 	.dw Title_Loop - 1 ;titlescr.asm
 	.dw State_HighScore - 1 ;titlescr.asm
 	.dw State_Match - 1
@@ -37,7 +38,7 @@ GameState_Table:
 	.dw 0 ;error handler	
 	
 GameStateInit_Table:
-	.dw 0
+	.dw State_Instructions_Init - 1 ;instrutions.asm
 	.dw Title_Init - 1 ;titlescr.asm
 	.dw State_HiScore_Init - 1 ;titlescr.asm
 	.dw State_Match_Init - 1
@@ -80,7 +81,11 @@ GameStateManager:
 
  .include "matchdata.txt"
  
-Match_StateMachine:
+Match0_StateMachine:
+	.db OPC_RAMWrite
+	.dw INSTRUCT_SYNC
+	.db 0
+
 	.db OPC_DrawSquare, $40, 32, 30
 	.dw $2000
 	
@@ -103,6 +108,9 @@ Match_StateMachine:
 	.db OPC_DrawString
 	.dw $210C, Match_Char0Record
 	
+	.db OPC_Delay, 250
+	.db OPC_Delay, 150
+	
 	.db OPC_DrawMetatileRow
 	.dw $20C2, COLLISION_MAP + 49
 	.db 14
@@ -119,14 +127,11 @@ Match_StateMachine:
 	.dw $2182, COLLISION_MAP + 49 + 48
 	.db 14
 	
-	.db OPC_DrawString
-	.dw $20C2, Match_Instructions1
-	
 	.db OPC_Halt
 	
 State_Match_Init:
-	LDX #LOW(Match_StateMachine)
-	LDY #HIGH(Match_StateMachine)
+	LDX #LOW(Match0_StateMachine)
+	LDY #HIGH(Match0_StateMachine)
 	JSR State_Interpreter_Init
 	LDA #LOW(Match_Char0Map)
 	STA <CALL_ARGS
@@ -138,6 +143,4 @@ State_Match_Init:
 State_Match:
 	JSR State_Interpreter
 	RTS
-	
-	
 	

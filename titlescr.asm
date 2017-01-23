@@ -22,7 +22,13 @@ Intro_StateMachine:
 	.db OPC_DrawRLE
 	.dw $236C, Text_PushRun
 	
-	.db OPC_Delay, 1
+	.db OPC_Delay, 250
+	.db OPC_Delay, 200
+	
+	.db OPC_RAMWrite
+	.dw INTRO_SHOWSCORE
+	.db TRUE
+	
 	.db OPC_Halt
 	
 Hiscore_StateMachine:
@@ -77,10 +83,25 @@ Hiscore_StateMachine:
 	.db OPC_DrawRLE
 	.dw $2315, Text_00
 	
+	.db OPC_Delay, 250
+	.db OPC_Delay, 200
+	
+	.db OPC_RAMWrite
+	.dw INTRO_SHOWSCORE
+	.db FALSE
+	
 	.db OPC_Halt
 	
 
 State_HighScore:
+	LDA INTRO_SHOWSCORE
+	CMP #TRUE
+	BEQ .cont
+	
+	LDA #STATE_TITLE
+	JSR GameState_Change
+.cont
+
 	JSR State_Interpreter
 	
 	LDA CTRLPORT_1
@@ -167,6 +188,7 @@ Title_Init:
 	STA INTRO_BULLETQ
 	STA INTRO_CHARQ
 	STA INTRO_TIMER
+	STA INTRO_SHOWSCORE
 
 	LDX #LOW(Intro_StateMachine)
 	LDY #HIGH(Intro_StateMachine)
@@ -175,6 +197,14 @@ Title_Init:
 	RTS
 
 Title_Loop:
+	LDA INTRO_SHOWSCORE
+	CMP #FALSE
+	BEQ .cont
+	
+	LDA #STATE_HISCORE
+	JSR GameState_Change
+	
+.cont
 	TCK INTRO_SPAWN_TMR
 	TCK INTRO_SPAWN_TMR + 1
 	
@@ -191,7 +221,7 @@ Title_Loop:
 	AND #CTRL_START
 	BNE .end
 	
-	LDA #STATE_HISCORE
+	LDA #STATE_GAME
 	JSR GameState_Change
 .end
 	RTS

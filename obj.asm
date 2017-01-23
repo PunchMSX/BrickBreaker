@@ -10,6 +10,8 @@ OBJ_INTRO_BALL = 4
 
 OBJ_BALL = 5
 
+OBJ_STATIC = 6
+
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
 ObjectLogic_Table:
@@ -22,6 +24,8 @@ ObjectLogic_Table:
 	
 	.dw _OBJ_Ball - 1
 	
+	.dw _OBJ_Static - 1
+	
 ObjectInit_Table:
 	.dw _OBJ_Debug_Checkered_Init - 1
 	.dw _OBJ_Debug_Checkered_Small_Init - 1
@@ -31,6 +35,12 @@ ObjectInit_Table:
 	.dw _OBJ_Intro_Ball_Init - 1
 	
 	.dw _OBJ_Ball_Init - 1
+	.dw _OBJ_Static - 1
+	
+;This is made to be positioned and metasprite'd by any external subroutine
+;	aka this can be any metasprite.	
+_OBJ_Static:
+	RTS
 	
 _OBJ_Ball_Init:
 	LDA #0
