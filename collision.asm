@@ -331,8 +331,41 @@ Overlap_Background_Small:
 	PLX
 	RTS
 
+CollisionMap_Default:
+	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	.db $FF, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	
+	.db $FF, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $FF
+	
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db $FF, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $FF	
+	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	
 ;Writes unbreakable tiles around the playfield
 CollisionMap_DefaultBorder:
+	LDY #0
+	LDX #0
+.loop1
+	LDA CollisionMap_Default, x
+	STA COLLISION_MAP, x
+	INX
+	CPX #240
+	BCC .loop1
+	
+	RTS
+	
+	
+	
+Irrlefaodjf:
 	LDA #TILE_BORDER
 	LDX #0
 .loop1

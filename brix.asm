@@ -15,6 +15,8 @@ FALSE = 0
  .ZP
 RESERVED_RLE	.ds  8
 
+FAMITONE_RESERVED .ds 3
+
 RNG_SEED		.ds 1
 
 TEMP_PTR		.ds 12 ;Three pointers to be used at will by any subroutine
@@ -155,7 +157,8 @@ INSTRUCT_AIM2 = 2
 INSTRUCT_AIM3 = 3
 INSTRUCT_FIRE = 4
 INSTRUCT_KILLBALL = 5
-INSTRUCT_END = 6
+INSTRUCT_ITEMS = 6
+INSTRUCT_END = 7
 
 GAME_HISCORES	.ds 2 * 5 ;2 base-100 bytes per score
 GAME_INITIALS	.ds 3 * 5 ;Three letters per score
@@ -208,6 +211,9 @@ COLMAP_EDITABLE_Y2 = 13
 
  .bank 1
  .org $A000
+ 
+	.include "lib/famitone2.asm"
+	.include "audio/sketchy/Boss.asm"
 	
 RNG_Next:
 	LDA <RNG_SEED
@@ -387,6 +393,13 @@ RESET:
 	LDA #TRUE
 	STA GAME_TRANSITION
 	
+	LDA #1
+	LDX #LOW(Boss_music_data)
+	LDY #HIGH(Boss_music_data)
+	JSR FamiToneInit
+	LDA #0
+	JSR FamiToneMusicPlay
+	
 ;*********************************************
 	
 Mainloop:
@@ -446,6 +459,8 @@ NMI:
 	LDA #NEXTFRAME_YES
 	STA PPU_NEXTFRAME
 	
+	JSR FamiToneUpdate
+	
 	PLP
 	PLA
 	TAY
@@ -455,9 +470,16 @@ NMI:
 	RTI
 	
  .data
+ .bank 2
+ .org $C000
+ ;DPCM samples goes here, aligned by 64 bytes.
+ 
+ .incbin "audio/sketchy/Boss.dmc" ;625 bytes
+	
+ .code
  .bank 3
  .org $E000
-
+	
 Main_Palette:
 	.incbin "art/bg.pal"
 	.incbin "art/sprite.pal"

@@ -88,8 +88,11 @@ So much work done!
 +Added instructional game state
 +Added coherent state transitions, now title screen cycles between itself and the high score table until start is pressed.
 
--Todo: When the level value is 0, go to instruction state. The instrction state will then go back to the match state after it's done, setting the level value to 1.
++When the level value is 0, go to instruction state. The instrction state will then go back to the match state after it's done, setting the level value to 1.
 	A gameover will set the level value to 1 so it doesn't repeat the instruction screen until the game is reset.
 	The level value must persist (ie not be reset) during state changes.
+	
++FamiTone2 audio library integrated into the project.
++A bunch of Public Domain released famitracker files were converted from VRC6 to a normal NES audio project to be used in the game.
 
 9 days left...

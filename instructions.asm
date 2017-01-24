@@ -57,7 +57,7 @@ Instruction0_StateMachine:
 	.dw INSTRUCT_SYNC
 	.db INSTRUCT_FIRE
 	
-	.db OPC_Delay, 15
+	.db OPC_Delay, 45
 	
 	.db OPC_RAMWrite
 	.dw INSTRUCT_SYNC
@@ -69,6 +69,24 @@ Instruction0_StateMachine:
 	.dw $22C5, Match_Instructions5
 	
 	.db OPC_Delay, 150
+	.db OPC_DrawSquare, $20, 28, 2
+	.dw $22C2
+	.db OPC_DrawString
+	.dw $22C5, Match_Instructions6
+	
+	.db OPC_RAMWrite
+	.dw INSTRUCT_SYNC
+	.db INSTRUCT_ITEMS
+	
+	.db OPC_Delay, 135
+	
+	.db OPC_DrawSquare, $20, 28, 2
+	.dw $22C2
+	
+	.db OPC_DrawString
+	.dw $22C5, Text_GoodLuck
+	
+	.db OPC_Delay, 250
 	
 	.db OPC_RAMWrite
 	.dw INSTRUCT_SYNC
@@ -98,6 +116,14 @@ State_Instructions:
 	BNE .exit
 	JMP .INSERT5
 .exit
+	CMP #INSTRUCT_END
+	BNE .exit2
+	JMP .gotogame
+.exit2
+	CMP #INSTRUCT_ITEMS
+	BNE .exit3
+	JMP .INSERT6
+.exit3:
 	RTS
 	
 .INSERT1
@@ -174,6 +200,7 @@ State_Instructions:
 	JSR ObjectList_Insert
 	LDA #14
 	STA OBJ_METASPRITE, x
+	STX INSTRUCT_ARROWS
 	
 	LDA #0
 	STA INSTRUCT_SYNC
@@ -186,6 +213,24 @@ State_Instructions:
 	
 	LDA #0
 	STA INSTRUCT_SYNC
+	
+	RTS
+
+.INSERT6
+	LDX INSTRUCT_ARROWS
+	LDA #$90
+	STA OBJ_XPOS, x
+	
+	LDA #0
+	STA INSTRUCT_SYNC
+	
+	RTS
+	
+.gotogame
+	LDA #1
+	STA MATCH_LEVEL
+	LDA #STATE_GAME
+	JSR GameState_Change
 	
 	RTS
 	

@@ -116,15 +116,15 @@ Match0_StateMachine:
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2102, COLLISION_MAP + 49 + 16
+	.dw $2102, COLLISION_MAP + 49 + 16 * 1
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2142, COLLISION_MAP + 49 + 32
+	.dw $2142, COLLISION_MAP + 49 + 16 * 2
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2182, COLLISION_MAP + 49 + 48
+	.dw $2182, COLLISION_MAP + 49 + 16 * 3
 	.db 14
 	
 	.db OPC_Halt
@@ -141,6 +141,15 @@ State_Match_Init:
 	RTS
 	
 State_Match:
+	LDA MATCH_LEVEL
+	BNE .cont
+	
+	LDA #STATE_INSTRUCTIONS
+	JSR GameState_Change
+	RTS
+	
+.cont
+
 	JSR State_Interpreter
 	RTS
 	

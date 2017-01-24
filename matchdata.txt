@@ -18,7 +18,7 @@ Match_Char0Bio: ;24 x 3 chars long
 	.db "A PERPETUAL AMATEUR WHO&"
 	.db "ENTERS EVERY YEAR AND &"
 	.db "LOSES EVERY TIME.&"
-	.db "TAKE IT EASY WITH HIM."
+	.db "  GO EASY ON HIM."
 	.db 0
 	
 Match_Instructions1
@@ -41,6 +41,10 @@ Match_Instructions5
 Match_Instructions6
 	.db "'A' SELECTS SPECIAL BALLS&"
 	.db "IF YOU HAVE ANY!"
+	.db 0
+	
+Text_GoodLuck:
+	.db "GOOD LUCK!"
 	.db 0
 	
 	;11x4
