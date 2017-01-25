@@ -239,10 +239,8 @@ Intro_SpawnBullets:
 	CMP #INTRO_SPAWNTIME
 	BCC .end
 	
-	JSR RNG_Next
-	TAX
-	JSR RNG_Next
-	TAY
+	LDX #$80
+	LDY #$80
 	LDA #OBJ_INTRO_BALL
 	JSR ObjectList_Insert ;Intro_Ball
 	

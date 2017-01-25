@@ -363,54 +363,6 @@ CollisionMap_DefaultBorder:
 	
 	RTS
 	
-	
-	
-Irrlefaodjf:
-	LDA #TILE_BORDER
-	LDX #0
-.loop1
-	STA COLLISION_MAP, x
-	INX
-	CPX #32
-	BNE .loop1
-	
-	
-	LDA #HIGH(COLLISION_MAP + 32)
-	STA <TEMP_BYTE + 1
-	LDA #LOW(COLLISION_MAP + 32)
-	STA <TEMP_BYTE
-	
-
-	LDX #0
-.loop2
-	LDA #TILE_BORDER
-	LDY #0
-	STA [TEMP_BYTE], y
-	LDY #15
-	STA [TEMP_BYTE], y
-
-	LDA #16
-	CLC
-	ADC <TEMP_BYTE
-	STA <TEMP_BYTE
-	LDA <TEMP_BYTE + 1
-	ADC #0
-	STA <TEMP_BYTE + 1
-	
-	INX
-	CPX #11
-	BNE .loop2
-	
-	LDX #0
-	LDA #TILE_BORDER
-.loop3
-	STA COLLISION_MAP + ( 16 * 13 ), x
-	INX
-	CPX #32
-	BNE .loop3
-	
-	RTS
-	
 ;Uploads the top half of the playfield collision map.
 ;Call_Args (2bytes) = collision data address
 CollisionMap_UploadTop:	

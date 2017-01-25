@@ -1,5 +1,11 @@
-SpeedX = OBJ_INTSTATE1
-SpeedY = OBJ_INTSTATE2	
+OBJ_SPEEDX = OBJ_INTSTATE1
+OBJ_SPEEDY = OBJ_INTSTATE2	
+OBJ_OLDX = OBJ_INTSTATE3
+OBJ_OLDY = OBJ_INTSTATE4
+
+BALL_SOLID = OBJ_INTSTATE5
+BALL_SELFDESTRUCT = OBJ_INTSTATE7
+
 
 OBJ_DEBUG_CHECKERED = 0
 OBJ_DEBUG_CHECKERED_SMALL = 1
@@ -9,8 +15,9 @@ OBJ_INTRO_PARACHUTE = 3
 OBJ_INTRO_BALL = 4
 
 OBJ_BALL = 5
-
 OBJ_STATIC = 6
+
+OBJ_PLAYER = 7
 
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
@@ -20,11 +27,12 @@ ObjectLogic_Table:
 	
 	.dw _OBJ_Intro_Player - 1
 	.dw _OBJ_Intro_Parachute - 1
-	.dw _OBJ_Intro_Ball - 1
-	
 	.dw _OBJ_Ball - 1
 	
+	.dw _OBJ_Ball - 1
 	.dw _OBJ_Static - 1
+	
+	.dw _OBJ_Player - 1
 	
 ObjectInit_Table:
 	.dw _OBJ_Debug_Checkered_Init - 1
@@ -32,11 +40,15 @@ ObjectInit_Table:
 	
 	.dw _OBJ_Intro_Player_Init - 1
 	.dw _OBJ_Intro_Parachute_Init - 1
-	.dw _OBJ_Intro_Ball_Init - 1
+	.dw _OBJ_Ball_Init - 1
 	
 	.dw _OBJ_Ball_Init - 1
 	.dw _OBJ_Static - 1
 	
+	.dw _OBJ_Player - 1
+	
+	
+_OBJ_Player:
 ;This is made to be positioned and metasprite'd by any external subroutine
 ;	aka this can be any metasprite.	
 _OBJ_Static:
@@ -45,165 +57,416 @@ _OBJ_Static:
 _OBJ_Ball_Init:
 	LDA #0
 	STA OBJ_METASPRITE, x
+	LDA #FALSE
+	STA BALL_SOLID, x
 	
 .gen
 	JSR RNG_Next
 	AND #%00000011
 	BEQ .gen
-	STA SpeedX, x
+	STA OBJ_SPEEDX, x
 .gen2	
 	JSR RNG_Next
 	AND #%00000011
 	BEQ .gen2
-	STA SpeedY, x
+	STA OBJ_SPEEDY, x
 	
 	JSR RNG_Next
 	AND #%00000001
-	BEQ .end
-	LDA SpeedX, x
+	BEQ .gen4
+	LDA OBJ_SPEEDX, x
 	NEG
-	STA SpeedX, x
-	JMP .end
+	STA OBJ_SPEEDX, x
+	JMP .gen4
 .gen4
 	JSR RNG_Next
 	AND #%00000001
 	BEQ .end
-	LDA SpeedY, x
+	LDA OBJ_SPEEDY, x
 	NEG
-	STA SpeedY, x
+	STA OBJ_SPEEDY, x
 	
 .end
 	RTS
 	
 	
 _OBJ_Ball:
+	LDA #FALSE
+	STA BALL_SELFDESTRUCT
+	
 	LDA OBJ_XPOS, x
 	STA OBJ_INTSTATE3, x
 	LDA OBJ_YPOS, x
 	STA OBJ_INTSTATE4, x ;Backup original X,Y position
 	
 .LeftRight
-	;Determine the current direction in the X axis
-	LDA SpeedX, x
-	BMI .left
-.right
-		CLC
-		ADC OBJ_XPOS, x
-		STA OBJ_XPOS, x
-		
-		;Checks the top/bottom right points for collisions
-		JSR Overlap_Background_Small
-		LDY COLLISION_OFFSET + 1
-		LDA COLLISION_MAP, y
-		BNE .horizCol
-		LDY COLLISION_OFFSET + 3
-		LDA COLLISION_MAP, y
-		BNE .horizCol
-		JMP .UpDown
-.left
-		CLC
-		ADC OBJ_XPOS, x
-		STA OBJ_XPOS, x
-		
-		;Checks the top/bottom right points for collisions
-		JSR Overlap_Background_Small
-		LDY COLLISION_OFFSET + 0
-		LDA COLLISION_MAP, y
-		BNE .horizCol
-		LDY COLLISION_OFFSET + 2
-		LDA COLLISION_MAP, y
-		BNE .horizCol
-		JMP .UpDown
+	LDA #FALSE
+	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
 	
-.horizCol ;Reflection works as following:
-		  ; 1- find out how much is the object embedded in the solid tile (collision_overlap)
-		  ; 2- move the object back so it touches the solid tile (add/sub the position with the value from 1)
-		  ; 3- invert the speed in the axis being evaluated
-		  ; (reflecting in the same run requires more collision detection checks, dangerous infinite loops may occur?)
-		LDA OBJ_XPOS, x
-		CMP OBJ_INTSTATE3, x
-		BCS .lr
+	;Determine the current direction in the X axis
+	LDA OBJ_SPEEDX, x
+	BMI .left
+	LDA #1
+	STA OBJ_INTSTATE8
+	JMP .lrcheck
+.left
+	LDA #0
+	STA OBJ_INTSTATE8
+	
+.lrcheck
+		LDA OBJ_SPEEDX, x
 		CLC
-		ADC COLLISION_OVERLAP
-		STA OBJ_XPOS, x		;Restore previous position if collision happened
-		
-		;Reflect
-		LDA SpeedX, x
-		NEG
-		STA SpeedX, x
-
-		JMP .UpDown
-.lr
-		;Touch Wall
-		SEC
-		SBC COLLISION_OVERLAP + 1
+		ADC OBJ_XPOS, x
 		STA OBJ_XPOS, x
-		DEC OBJ_XPOS, x
 		
-		;Reflect
-		LDA SpeedX, x
-		NEG
-		STA SpeedX, x
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
+		
+		LDA #0
+		CLC
+		ADC OBJ_INTSTATE8
+		STA <CALL_ARGS ;Top Right/Left tile
+		
+		TAY
+		LDA COLLISION_OFFSET, y
+		TAY
+		LDA COLLISION_MAP, y
+		
+		JSR Ball_CollisionX ;Resolve collision between the obj and top right tile
+		
+		LDA #2
+		CLC
+		ADC OBJ_INTSTATE8
+		STA <CALL_ARGS ;Bottom Right/Left tile
+		
+		TAY
+		LDA COLLISION_OFFSET, y
+		TAY
+		LDA COLLISION_MAP, y
+
+		JSR Ball_CollisionX ;Resolve collision between the obj and bottom right tile
 		
 .UpDown
 	;Determine the current direction in the X axis
-	LDA SpeedY, x
-	BMI .up
-.down
-		CLC
-		ADC OBJ_YPOS, x
-		STA OBJ_YPOS, x
-		
-		;Checks the top/bottom right points for collisions
-		JSR Overlap_Background_Small
-		LDY COLLISION_OFFSET + 2
-		LDA COLLISION_MAP, y
-		BNE .vertCol
-		LDY COLLISION_OFFSET + 3
-		LDA COLLISION_MAP, y
-		BNE .vertCol
-		JMP .endCol
-.up
-		CLC
-		ADC OBJ_YPOS, x
-		STA OBJ_YPOS, x
-		
-		;Checks the top/bottom right points for collisions
-		JSR Overlap_Background_Small
-		LDY COLLISION_OFFSET + 0
-		LDA COLLISION_MAP, y
-		BNE .vertCol
-		LDY COLLISION_OFFSET + 1
-		LDA COLLISION_MAP, y
-		BNE .vertCol
-		JMP .endCol
+	LDA #FALSE
+	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
 	
-.vertCol ;Same as horizontal collision detection
-		LDA OBJ_YPOS, x
-		CMP OBJ_INTSTATE4, x
-		BCS .ud
+	LDA OBJ_SPEEDY, x
+	BMI .up
+	
+	LDA #2
+	STA OBJ_INTSTATE8
+	JMP .udcheck
+.up
+	LDA #0
+	STA OBJ_INTSTATE8
+	
+.udcheck
+		LDA OBJ_SPEEDY, x
 		CLC
-		ADC COLLISION_OVERLAP + 2
-		STA OBJ_YPOS, x		;Restore previous position if collision happened
-		
-		;Reflect
-		LDA SpeedY, x
-		NEG
-		STA SpeedY, x
-		
-		JMP .endCol
-.ud
-		SEC
-		SBC COLLISION_OVERLAP + 3
+		ADC OBJ_YPOS, x
 		STA OBJ_YPOS, x
-		DEC OBJ_YPOS, x
 		
-		;Reflect
-		LDA SpeedY, x
-		NEG
-		STA SpeedY, x
+		;Checks the top/bottom right points for collisions
+		JSR Overlap_Background_Small
 		
-.endCol
+		LDA #0
+		CLC
+		ADC OBJ_INTSTATE8
+		STA <CALL_ARGS ;Top/bottom left tile
+		
+		TAY
+		LDA COLLISION_OFFSET, y
+		TAY
+		LDA COLLISION_MAP, y
+		
+		JSR Ball_CollisionY ;Resolve collision between the obj and top right tile
+		
+		LDA #1
+		CLC
+		ADC OBJ_INTSTATE8
+		STA <CALL_ARGS ;Bottom Right/Left tile
+		
+		TAY
+		LDA COLLISION_OFFSET, y
+		TAY
+		LDA COLLISION_MAP, y
+
+		JSR Ball_CollisionY ;Resolve collision between the obj and bottom right tile
+		
+.selfDestruct
+	LDA BALL_SELFDESTRUCT
+	CMP #TRUE
+	BNE .exit
+	JSR ObjectList_Remove
+.exit
+	RTS
+	
+;Evaluates collision against a tile that the object overlaps.
+;A = type of tile overlapped, X = obj id	
+Ball_CollisionX:
+	BNE .start
+	RTS ;If zero, it's an empty tile, skip
+	
+.start
+	LDY BALL_SOLID, x
+	CPY #TRUE
+	BNE .nonSolid
+	
+	;Brick = Reflect and destroy tile
+	CMP #TILE_BRICK
+	BNE .border
+	JSR Ball_ReflectX
+	
+	LDY <CALL_ARGS
+	LDA COLLISION_OFFSET, y
+	TAY
+	LDA #TILE_RUBBLE
+	STA COLLISION_MAP, y
+	
+	;Order the PPU to redraw the removed tile from the screen.
+	STA <CALL_ARGS
+	
+	TYA
+	LSR A
+	LSR A
+	LSR A
+	LSR A
+	STA <CALL_ARGS + 2
+	
+	TYA
+	AND #%00001111
+	STA <CALL_ARGS + 1
+	
+	PHX
+	;This is UNSAFE for X and will make the game hard crash if X is not properly backed up.
+	JSR PPU_DrawMetatile
+	PLX
+	
+	RTS
+	
+.nonSolid: ;Tiles below can be hit even if ball is non-solid
+.border ;reflect only
+	CMP #TILE_BORDER
+	BNE .solidifier
+	JSR Ball_ReflectX
+	RTS
+	
+.solidifier	;pass through and become solid
+	CMP #TILE_SOLIDIFIER
+	BNE .target
+	LDA #TRUE
+	STA BALL_SOLID, x
+	RTS
+	
+.target ;destroy self and increase score if all 4 corners are in
+	LDY COLLISION_OFFSET
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 1
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 2
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 3
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	
+	LDA #TRUE
+	STA BALL_SELFDESTRUCT
+	LDA OBJ_YPOS, x
+	CMP #$80
+	BCS .p1targethit
+.p2targethit
+	INC MATCH_P1SCOREBUF
+	RTS
+.p1targethit
+	INC MATCH_P2SCOREBUF
+	RTS
+	
+.placeholder ;next tile type to be created.
+	RTS
+	
+;Evaluates collision against a tile that the object overlaps.
+;A = type of tile overlapped, X = obj id	
+Ball_CollisionY:
+	BNE .start
+	RTS ;If zero, it's an empty tile, skip
+	
+.start
+	LDY BALL_SOLID, x
+	CPY #TRUE
+	BNE .nonSolid
+	
+	;Brick = Reflect and destroy tile
+	CMP #TILE_BRICK
+	BNE .border
+	JSR Ball_ReflectY
+	
+	LDY <CALL_ARGS
+	LDA COLLISION_OFFSET, y
+	TAY
+	LDA #TILE_RUBBLE
+	STA COLLISION_MAP, y
+		
+	;Order the PPU to redraw the removed tile from the screen.
+	STA <CALL_ARGS
+	
+	TYA
+	LSR A
+	LSR A
+	LSR A
+	LSR A
+	STA <CALL_ARGS + 2
+	
+	TYA
+	AND #%00001111
+	STA <CALL_ARGS + 1
+	
+	PHX
+	;This is UNSAFE for X and will make the game hard crash if X is not properly backed up.
+	JSR PPU_DrawMetatile
+	PLX
+	RTS
+	
+.nonSolid: ;Tiles below can be hit even if ball is non-solid
+.border ;reflect only
+	CMP #TILE_BORDER
+	BNE .solidifier
+	JSR Ball_ReflectY
+	RTS
+	
+.solidifier	;pass through and become solid
+	CMP #TILE_SOLIDIFIER
+	BNE .target
+	LDA #TRUE
+	STA BALL_SOLID, x
+	RTS
+	
+.target ;destroy self and increase score if all 4 corners are in
+	LDY COLLISION_OFFSET
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 1
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 2
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	LDY COLLISION_OFFSET + 3
+	LDA COLLISION_MAP, y
+	CMP #TILE_TARGET
+	BNE .placeholder
+	
+	LDA #TRUE
+	STA BALL_SELFDESTRUCT
+	LDA OBJ_YPOS, x
+	CMP #$80
+	BCS .p1targethit
+.p2targethit
+	INC MATCH_P1SCOREBUF
+	RTS
+.p1targethit
+	INC MATCH_P2SCOREBUF
+	RTS
+	
+.placeholder ;next tile type to be created.
+	RTS
+	
+Ball_ReflectX:
+;Reflection works as following:
+; 1- find out how much is the object embedded in the solid tile (collision_overlap)
+; 2- move the object back so it touches the solid tile (add/sub the position with the value from 1)
+; 3- invert the speed in the axis being evaluated
+; (reflecting in the same run requires more collision detection checks, dangerous infinite loops may occur?)
+
+	;Check if overlap values are nonzero.
+	;If nonzero, this already ran once in this frame.
+	LDA OBJ_INTSTATE6, x
+	BEQ .start
+	RTS
+
+.start
+	LDA OBJ_XPOS, x
+	CMP OBJ_INTSTATE3, x
+	BCS .lr
+.rl
+	CLC
+	ADC COLLISION_OVERLAP
+	STA OBJ_XPOS, x		;Restore previous position if collision happened
+	
+	;Reflect
+	LDA OBJ_SPEEDX, x
+	NEG
+	STA OBJ_SPEEDX, x
+
+	JMP .exit
+.lr
+	;Touch Wall
+	SEC
+	SBC COLLISION_OVERLAP + 1
+	STA OBJ_XPOS, x
+	DEC OBJ_XPOS, x
+	
+	;Reflect
+	LDA OBJ_SPEEDX, x
+	NEG
+	STA OBJ_SPEEDX, x
+		
+.exit
+	LDA #1
+	STA OBJ_INTSTATE6, x
+	RTS
+	
+Ball_ReflectY:
+;Reflection works as following:
+; 1- find out how much is the object embedded in the solid tile (collision_overlap)
+; 2- move the object back so it touches the solid tile (add/sub the position with the value from 1)
+; 3- invert the speed in the axis being evaluated
+; (reflecting in the same run requires more collision detection checks, dangerous infinite loops may occur?)
+
+	;Check if overlap values are nonzero.
+	;If nonzero, this already ran once in this frame.
+	LDA OBJ_INTSTATE6, x
+	BEQ .start
+	RTS
+
+.start
+	LDA OBJ_YPOS, x
+	CMP OBJ_INTSTATE4, x
+	BCS .ud
+	CLC
+	ADC COLLISION_OVERLAP + 2
+	STA OBJ_YPOS, x		;Restore previous position if collision happened
+	
+	;Reflect
+	LDA OBJ_SPEEDY, x
+	NEG
+	STA OBJ_SPEEDY, x
+	
+	JMP .exit
+.ud
+	SEC
+	SBC COLLISION_OVERLAP + 3
+	STA OBJ_YPOS, x
+	DEC OBJ_YPOS, x
+	
+	;Reflect
+	LDA OBJ_SPEEDY, x
+	NEG
+	STA OBJ_SPEEDY, x
+		
+.exit
+	LDA #1
+	STA OBJ_INTSTATE6, x
 	RTS
 	
 	
@@ -291,9 +554,9 @@ _OBJ_Intro_Player_Init:
 	
 	LDA #0
 	STA OBJ_YPOS, x
-	STA SpeedX, x
+	STA OBJ_SPEEDX, x
 	LDA #1
-	STA SpeedY, x
+	STA OBJ_SPEEDY, x
 	LDY #0
 	JSR ChangeAnimation
 	
@@ -325,12 +588,12 @@ _OBJ_Intro_Player_Init:
 	
 _OBJ_Intro_Player:
 .moveh
-	LDA SpeedX, x
+	LDA OBJ_SPEEDX, x
 	CLC
 	ADC OBJ_XPOS, x
 	STA OBJ_XPOS, x
 .movev
-	LDA SpeedY, x
+	LDA OBJ_SPEEDY, x
 	CLC
 	ADC OBJ_YPOS, x
 	STA OBJ_YPOS, x
@@ -379,7 +642,7 @@ _OBJ_Intro_Parachute:
 	LDA OBJ_INTSTATE1, x ;Loads parent id
 	TAY
 	LDA #3
-	STA SpeedY, y ;Umbrella broken, parent falls faster.
+	STA OBJ_SPEEDY, y ;Umbrella broken, parent falls faster.
 	
 	LDA #9
 	STA OBJ_METASPRITE, x ;Change metasprite to broken umbrella
@@ -404,29 +667,29 @@ _OBJ_Intro_Ball_Init:
 	AND #%00000110
 	SEC
 	SBC #4
-	STA SpeedX, x
+	STA OBJ_SPEEDX, x
 	
 	JSR RNG_Next
 	SEC
 	SBC #4
 	AND #%00000110
-	STA SpeedY, x
+	STA OBJ_SPEEDY, x
 	
 	BNE .end
-	LDA SpeedX, x
+	LDA OBJ_SPEEDX, x
 	BEQ .gen ;If both speed values are 0, retry.
 .end
 	RTS
 
 _OBJ_Intro_Ball:
 .moveh
-	LDA SpeedX, x
+	LDA OBJ_SPEEDX, x
 	CLC
 	ADC OBJ_XPOS, x
 	STA OBJ_XPOS, x
 	JSR Overlap_Background_Small
 .movev
-	LDA SpeedY, x
+	LDA OBJ_SPEEDY, x
 	CLC
 	ADC OBJ_YPOS, x
 	STA OBJ_YPOS, x
@@ -508,7 +771,14 @@ ObjectList_Insert:
 	LDA #0
 	STA OBJ_ANIMTIMER, x ;Clears animation timer
 	STA OBJ_ANIMFRAME, x ;Sets current animation frame to 0.
-	;STA OBJ_METASPRITE, x
+	;STA OBJ_INTSTATE1, x
+	;STA OBJ_INTSTATE2, x
+	STA OBJ_INTSTATE3, x
+	STA OBJ_INTSTATE4, x
+	STA OBJ_INTSTATE5, x
+	STA OBJ_INTSTATE6, x
+	STA OBJ_INTSTATE7, x
+	STA OBJ_INTSTATE8, x
 	TXA
 	RTS ;End!
 	

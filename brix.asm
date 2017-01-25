@@ -133,6 +133,10 @@ OBJ_INTSTATE1	.ds OBJ_MAX
 OBJ_INTSTATE2	.ds OBJ_MAX
 OBJ_INTSTATE3	.ds OBJ_MAX
 OBJ_INTSTATE4	.ds OBJ_MAX
+OBJ_INTSTATE5	.ds OBJ_MAX
+OBJ_INTSTATE6	.ds OBJ_MAX
+OBJ_INTSTATE7	.ds OBJ_MAX
+OBJ_INTSTATE8	.ds OBJ_MAX
 
  .org $500
 GAME_STATE		.ds 1
@@ -140,6 +144,25 @@ GAME_OLDSTATE 	.ds 1
 GAME_TRANSITION	.ds 1
 
 MATCH_LEVEL		.ds 1 ;Current match # (level id), 0 for first run.
+MATCH_TIMER		.ds 1 ;Base 100 number representing the time left.
+MATCH_FRAMES	.ds 1 ;frame timer, increase main timer when full.
+MATCH_P1SCORE	.ds 1
+MATCH_P2SCORE	.ds 1 ;The score (base 100) of each player on the field.
+MATCH_TIMER_DEFAULT = 99
+
+MATCH_P1BALLS	.ds 1 ;Number of balls player/enemy has to be launched.
+MATCH_P2BALLS	.ds 1
+MATCH_BALL_MAX = 3
+
+MATCH_P1SCOREBUF .ds 1
+MATCH_P2SCOREBUF .ds 1 ;A buffer which balls increment when they hit the goal.
+
+MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writes before the match starts.
+
+MATCH_P1SCORE_PPU = $204A
+MATCH_P2SCORE_PPU = $2054
+MATCH_TIMER_PPU   = $204F
+
 
 INTRO_BULLETQ 	.ds 1
 INTRO_CHARQ		.ds 1
@@ -474,7 +497,7 @@ NMI:
  .org $C000
  ;DPCM samples goes here, aligned by 64 bytes.
  
- .incbin "audio/sketchy/Boss.dmc" ;625 bytes
+ .incbin "audio/sketchy/Boss.dmc" 
 	
  .code
  .bank 3

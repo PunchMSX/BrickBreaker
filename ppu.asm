@@ -9,6 +9,7 @@ PPU_NUMBER_8 = 4
 PPU_NUMBER_100 = 5
 PPU_DRAWSTRING = 6
 PPU_METATILEROW = 7
+PPU_NUMBER_100_LARGE = 8
 
 PPU_Command_Table:
 	.dw _PPU_Idle - 1
@@ -19,6 +20,7 @@ PPU_Command_Table:
 	.dw _PPU_DrawBase100Number - 1
 	.dw _PPU_DrawString - 1
 	.dw _PPU_DrawMetatileRow - 1
+	.dw _PPU_DrawLargeBase100Number - 1
 	
 PPU_MAXWRITES = 8 ;Maximum # of bytes to be written during VBlank, conservative guess.
 RLE_MAXBYTES = 20
@@ -109,6 +111,33 @@ PPU_DrawNumber:
 	JSR PPU_Queue1_Insert
 	LDA <CALL_ARGS + 3
 	JSR PPU_Queue1_Insert
+	
+.fail ;No space to store order, abort
+	RTS
+	
+;Draws a 8 bit number in decimal form
+;(2 byte PPU address, 2 bytes # to be drawn)
+PPU_DrawLargeBase100:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least two slots to work
+	
+	LDA #PPU_NUMBER_100_LARGE
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS 
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS + 1
+	JSR PPU_Queue1_Insert
+	
+	LDY #0
+	LDA [CALL_ARGS + 2], y
+	JSR Base100ToDecimal
+	
+	LDA <TEMP_BYTE
+	JSR PPU_Queue1_Insert
+	LDA <TEMP_BYTE + 1
+	JSR PPU_Queue1_Insert
+	
 	
 .fail ;No space to store order, abort
 	RTS
@@ -345,6 +374,62 @@ _PPU_DrawString:
 	JSR PPU_AllowStep
 	RTS
 	
+;Draws a 8 bit number in decimal form
+;(2 byte PPU address, 2 bytes # to be drawn)
+_PPU_DrawLargeBase100Number
+	LDA PPU_NUMWRITES
+	CMP #PPU_MAXWRITES - 3
+	BCC .start
+	RTS	;Too many writes, wait for next frame.
+.start
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR3
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR4
+	
+	LDA $2002
+	LDA <PPU_QR4
+	STA $2006
+	LDA <PPU_QR3
+	STA $2006
+	
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR1
+	CLC
+	ADC #$60
+	STA $2007
+	
+	JSR PPU_Queue1_Retrieve
+	STA <PPU_QR2
+	CLC
+	ADC #$60
+	STA $2007
+	
+	LDA $2002
+	LDA <PPU_QR3
+	CLC
+	ADC #$20
+	PHA
+	
+	LDA <PPU_QR4
+	ADC #0
+	STA $2006
+	PLA
+	STA $2006
+	
+	LDA <PPU_QR1
+	CLC
+	ADC #$70
+	STA $2007
+	
+	LDA <PPU_QR2
+	CLC
+	ADC #$70
+	STA $2007
+	
+	JSR PPU_AllowStep
+	RTS
+
 ;Draws a 8 bit number in decimal form
 ;(2 byte PPU address, 2 bytes # to be drawn)
 _PPU_DrawBase100Number:

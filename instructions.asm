@@ -102,6 +102,17 @@ State_Instructions_Init:
 	RTS
 	
 State_Instructions:
+.Skip
+	LDA CTRLPORT_1
+	AND #CTRL_START
+	BEQ .check
+	LDA OLDCTRL_1
+	AND #CTRL_START
+	BNE .check
+	
+	JMP .gotogame
+
+.check
 	JSR State_Interpreter
 	LDA INSTRUCT_SYNC
 	CMP #INSTRUCT_AIM1
@@ -190,9 +201,9 @@ State_Instructions:
 	JSR ObjectList_Insert
 	STX INSTRUCT_BALL
 	LDA #-1
-	STA SpeedX, x
+	STA OBJ_SPEEDX, x
 	LDA #-1
-	STA SpeedY, x
+	STA OBJ_SPEEDY, x
 	
 	LDX #96
 	LDY #$C0

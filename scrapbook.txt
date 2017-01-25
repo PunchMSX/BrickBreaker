@@ -96,3 +96,18 @@ So much work done!
 +A bunch of Public Domain released famitracker files were converted from VRC6 to a normal NES audio project to be used in the game.
 
 9 days left...
+
+24/02
++Routine to write 8x16 numbers written.
++A good portion of logic to the match gamestate was added.
++Each enemy has a different collision layout, therefore the match state now reads it from a table indexed by the match #.
++Restructured ball collision code to make it behave differently for each type of tile.
++Brick tiles can now be broken, goal tiles increase score buffer.
++Added colored post-it strips on my laptop screen to indicate how many days are left :P
+
+-todo: match state has to check score buffer and add to the score each frame then update ppu if needed.
+-Todo: one state machine per match to draw different bios; or
+		state machine opcodes to read from a table address and perform operations with indirect addressing; or
+		another separated state dedicated to writing character bios on screen before matches.
+		
+8 days left...
