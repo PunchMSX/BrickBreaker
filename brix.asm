@@ -256,6 +256,9 @@ Ctrl_Read:
 	LDA CTRLPORT_2
 	STA OLDCTRL_2
 	
+	LDY #$FF
+.0
+	INY
 	LDA #1
 	STA $4016
 	LDA #0
@@ -277,6 +280,35 @@ Ctrl_Read:
 	DEX
 	BNE .2
 	
+	;DPCM Playback corruption check
+	TYA
+	AND #%00000001
+	BNE .compare
+
+	LDA CTRLPORT_1
+	STA <TEMP_BYTE
+	LDA CTRLPORT_2
+	STA <TEMP_BYTE + 1
+	JMP .0
+.compare
+	LDA CTRLPORT_1
+	CMP <TEMP_BYTE
+	BNE .glitch
+	LDA CTRLPORT_2
+	CMP <TEMP_BYTE + 1
+	BNE .glitch
+	RTS
+	
+.glitch
+	CPY #7
+	BCS .readfail
+	JMP .0
+	
+.readfail:
+	LDA OLDCTRL_1
+	STA CTRLPORT_1
+	LDA OLDCTRL_2
+	STA CTRLPORT_2
 	RTS
 	
 DrawScanline: ;Good old CPU processing time indicator 

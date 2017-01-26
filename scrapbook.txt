@@ -82,7 +82,7 @@ So much work done!
 +Instructions written
 +Skeleton for match game state done
 
-23/02
+23/01
 +State machine opcode for writing a value at a ram address added for sync.
 +Fixed bug in DEC16 macro that made the State_Interpreter fail depending on the phase of the moon (if the initial state machine address' low byte was exactly 00 it would fail to account for the underflow.)
 +Added instructional game state
@@ -97,7 +97,7 @@ So much work done!
 
 9 days left...
 
-24/02
+24/01
 +Routine to write 8x16 numbers written.
 +A good portion of logic to the match gamestate was added.
 +Each enemy has a different collision layout, therefore the match state now reads it from a table indexed by the match #.
@@ -111,3 +111,11 @@ So much work done!
 		another separated state dedicated to writing character bios on screen before matches.
 		
 8 days left...
+
+25/01
+
++Implemented player object and an umbrella attachment object with heightmapped collision detection against balls.
++Collision map now dedicates 3 highest bits to store "durability", ie # of hits to break.
+
+-Note: sprite collision detection loops were created with the assumption that we needed to check for collisions only on objects after the one we're checking against. Remember to fix this later.
+-Todo: actually use the durability bits in the ball's collision routine

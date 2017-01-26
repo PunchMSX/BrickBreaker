@@ -11,9 +11,9 @@ MS_Collision_Table:
 _COL_Projectile_Default:
 	.db -3,  2,  -3,  2
 _COL_Umbrella_Up:
-	.db -11, 10,  0,  7 ;Col x1, x2, y1, y2
+	.db -11, 9,  0,  7 ;Col x1, x2, y1, y2
 _COL_Umbrella_Down:
-	.db -11, 10,  0,  7
+	.db -11, 9,  0,  7
 _COL_Chara_Up:
 	.db -6,   5,  0,  7
 _COL_Chara_Up_Blink:

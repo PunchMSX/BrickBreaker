@@ -76,6 +76,11 @@ Debug_MapEdit_Init:
 	LDA #OBJ_DEBUG_CHECKERED_SMALL
 	JSR ObjectList_Insert
 	
+	LDX #$78
+	LDY #$BC
+	LDA #OBJ_PLAYER
+	JSR ObjectList_Insert
+	
 	JSR CollisionMap_DefaultBorder
 	RTS
 	

@@ -6,6 +6,9 @@ OBJ_OLDY = OBJ_INTSTATE4
 BALL_SOLID = OBJ_INTSTATE5
 BALL_SELFDESTRUCT = OBJ_INTSTATE7
 
+PLAYER_UMBRELLAID = OBJ_INTSTATE5
+UMB_PARENTID = OBJ_INTSTATE1
+
 
 OBJ_DEBUG_CHECKERED = 0
 OBJ_DEBUG_CHECKERED_SMALL = 1
@@ -18,6 +21,7 @@ OBJ_BALL = 5
 OBJ_STATIC = 6
 
 OBJ_PLAYER = 7
+OBJ_UMBRELLA = 8
 
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
@@ -33,6 +37,7 @@ ObjectLogic_Table:
 	.dw _OBJ_Static - 1
 	
 	.dw _OBJ_Player - 1
+	.dw _OBJ_Umbrella - 1
 	
 ObjectInit_Table:
 	.dw _OBJ_Debug_Checkered_Init - 1
@@ -45,10 +50,244 @@ ObjectInit_Table:
 	.dw _OBJ_Ball_Init - 1
 	.dw _OBJ_Static - 1
 	
-	.dw _OBJ_Player - 1
+	.dw _OBJ_Player_Init - 1
+	.dw _OBJ_Umbrella_Init - 1
 	
+_OBJ_Player_Init:
+	LDY #0
+	JSR ChangeAnimation
+	
+.spawnUmbrella
+	PHX
+
+	LDA OBJ_XPOS, x
+	CLC
+	ADC #6
+	PHA
+	
+	
+	LDA OBJ_YPOS, x
+	SEC
+	SBC #8
+	TAY
+	PLX
+	LDA #OBJ_UMBRELLA
+	
+	JSR ObjectList_Insert
+	CMP #$FF
+	BEQ .fail
+	
+	STA PLAYER_UMBRELLAID, x
+	PLA
+	STA UMB_PARENTID, x
+	
+	RTS
+	
+.fail
+	PLX
+	JSR ObjectList_Remove
+	RTS
+	
+_OBJ_Umbrella_Init:
+	LDA #1
+	STA OBJ_METASPRITE, x
+	
+	RTS
 	
 _OBJ_Player:
+	JSR AnimTimer_Tick
+	JSR AnimateObject
+	
+.checkCtrl
+	LDA CTRLPORT_1
+	AND #CTRL_LEFT
+	BEQ .checkCtrlRight
+	DEC OBJ_XPOS, x
+	LDA OBJ_XPOS, x
+	CMP #16
+	BCS .checkABButton
+	LDA #16
+	STA OBJ_XPOS, x
+	JMP .checkABButton
+	
+.checkCtrlRight
+	LDA CTRLPORT_1
+	AND #CTRL_RIGHT
+	BEQ .checkABButton
+	INC OBJ_XPOS, x
+	LDA OBJ_XPOS, x
+	CMP #16
+	BCS .checkABButton
+	LDA #256-16
+	STA OBJ_XPOS, x
+	
+.checkABButton
+	LDA CTRLPORT_1
+	AND #CTRL_B
+	BEQ .endCtrlCheck
+	DEC OBJ_XPOS, x
+	LDA OBJ_XPOS, x
+	CMP #16
+	BCS .endCtrlCheck
+	LDA #16
+	STA OBJ_XPOS, x
+	
+.endCtrlCheck
+	RTS
+	
+
+	
+;11 pixels each side = 22
+Umbrella_HeightMap_Table:
+	.db 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0
+	.db 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 4
+	
+Umbrella_Angle_Table:
+	.db -2, -2, -2, -2, -1, -1, -1, -1, 0, 0, 0
+	.db 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2
+	
+Umbrella_Collision:
+	LDY #255
+	TYA
+	STA OBJ_COLLISION, x
+.loop:
+	INY
+	CPY #OBJ_MAX
+	BNE .eval
+	JMP .end
+.eval
+	LDA OBJ_LIST, y
+	CMP #OBJ_BALL
+	BEQ .found
+	JMP .loop
+.found
+	JSR Overlap_Test_1Box
+	CMP #OVERLAP_FALSE
+	BEQ .loop
+	
+	TYA
+	STA OBJ_COLLISION, x
+	PHA
+	
+	LDA OBJ_SPEEDY, y
+	BPL .checkHeight
+	PLA
+	TAY
+	JMP .loop
+	
+.checkHeight
+	;Check ball height
+	
+	LDA OBJ_YPOS, y
+	STA <TEMP_BYTE
+	
+	LDA OBJ_XPOS, y
+	STA <TEMP_BYTE + 1
+	
+	LDA OBJ_METASPRITE, y
+	ASL A
+	ASL A
+	TAY
+	
+	;Get lowest Y point in ball
+	LDA MS_Collision_Table + 3, y
+	CLC
+	ADC <TEMP_BYTE
+	STA <TEMP_BYTE
+	
+	;gets horizontal corners
+	LDA MS_Collision_Table + 1, y
+	CLC
+	ADC <TEMP_BYTE + 1
+	STA <TEMP_BYTE + 2
+	
+	LDA MS_Collision_Table + 0, y
+	CLC
+	ADC <TEMP_BYTE + 1
+	STA <TEMP_BYTE + 1
+	
+	;Get how much (by pixels) the ball is inside the umbrella
+	LDA <TEMP_BYTE
+	SEC
+	SBC OBJ_YPOS, x
+	STA <TEMP_BYTE
+	
+	;get the difference in X between sprites
+	PLA
+	TAY
+	LDA OBJ_XPOS, y
+	SEC
+	SBC OBJ_XPOS, x
+	
+	;Decides whether to use the left or right corner pos. depending on the object's position
+	BPL .rightside
+	LDA <TEMP_BYTE + 2
+	SEC
+	SBC OBJ_XPOS, x
+	JMP .getindex
+.rightside
+	LDA <TEMP_BYTE + 1
+	SEC
+	SBC OBJ_XPOS, x
+	
+.getindex
+	CLC
+	ADC #11 ;table begins in pixel position -11
+	BPL .checkHeightTable ;if minus, outside collision box
+	JMP .loop
+.checkHeightTable
+	STY <TEMP_BYTE + 3 ;ball obj id
+	TAY ;Y = ball x pos irt umbrella
+	LDA Umbrella_HeightMap_Table, y
+	CMP <TEMP_BYTE
+	BCS .returnloop ;smaller height, return to loop and investigate next
+	
+	;reflect according to angle
+	LDA Umbrella_Angle_Table, y
+	STA <TEMP_BYTE + 4
+	LDY <TEMP_BYTE + 3
+	
+.reflect
+	LDA OBJ_SPEEDY, y
+	NEG
+	STA OBJ_SPEEDY, y
+	
+	LDA <TEMP_BYTE + 4
+	STA OBJ_SPEEDX, y
+	
+	RTS ;there might be more balls colliding but that's checked next frame only.
+	
+.returnloop
+	LDY <TEMP_BYTE + 3
+	JMP .loop
+.end
+	RTS
+	
+_OBJ_Umbrella:
+	LDY UMB_PARENTID, x
+	CPY #$FF
+	BNE .sync
+	JSR ObjectList_Remove
+	RTS
+	
+.sync
+	;Sync with parent metasprite
+	LDA OBJ_XPOS, y
+	CLC
+	ADC #6
+	STA OBJ_XPOS, x
+	
+	LDA OBJ_YPOS, y
+	SEC
+	SBC #8
+	STA OBJ_YPOS, x
+	
+.collisionDetection
+	LDY #OBJ_BALL
+	JSR Umbrella_Collision
+	
+.endcollision
+
 ;This is made to be positioned and metasprite'd by any external subroutine
 ;	aka this can be any metasprite.	
 _OBJ_Static:
@@ -131,7 +370,7 @@ _OBJ_Ball:
 		LDA COLLISION_OFFSET, y
 		TAY
 		LDA COLLISION_MAP, y
-		
+		AND #%00011111
 		JSR Ball_CollisionX ;Resolve collision between the obj and top right tile
 		
 		LDA #2
@@ -143,7 +382,7 @@ _OBJ_Ball:
 		LDA COLLISION_OFFSET, y
 		TAY
 		LDA COLLISION_MAP, y
-
+		AND #%00011111
 		JSR Ball_CollisionX ;Resolve collision between the obj and bottom right tile
 		
 .UpDown
@@ -179,7 +418,7 @@ _OBJ_Ball:
 		LDA COLLISION_OFFSET, y
 		TAY
 		LDA COLLISION_MAP, y
-		
+		AND #%00011111
 		JSR Ball_CollisionY ;Resolve collision between the obj and top right tile
 		
 		LDA #1
@@ -191,7 +430,7 @@ _OBJ_Ball:
 		LDA COLLISION_OFFSET, y
 		TAY
 		LDA COLLISION_MAP, y
-
+		AND #%00011111
 		JSR Ball_CollisionY ;Resolve collision between the obj and bottom right tile
 		
 .selfDestruct
@@ -202,6 +441,7 @@ _OBJ_Ball:
 .exit
 	RTS
 	
+
 ;Evaluates collision against a tile that the object overlaps.
 ;A = type of tile overlapped, X = obj id	
 Ball_CollisionX:
@@ -209,13 +449,20 @@ Ball_CollisionX:
 	RTS ;If zero, it's an empty tile, skip
 	
 .start
+.border ;reflect only
+	CMP #TILE_BORDER
+	BNE .solid
+	JSR Ball_ReflectX
+	RTS
+	
+.solid
 	LDY BALL_SOLID, x
 	CPY #TRUE
 	BNE .nonSolid
 	
 	;Brick = Reflect and destroy tile
 	CMP #TILE_BRICK
-	BNE .border
+	BNE .solidifier
 	JSR Ball_ReflectX
 	
 	LDY <CALL_ARGS
@@ -246,11 +493,6 @@ Ball_CollisionX:
 	RTS
 	
 .nonSolid: ;Tiles below can be hit even if ball is non-solid
-.border ;reflect only
-	CMP #TILE_BORDER
-	BNE .solidifier
-	JSR Ball_ReflectX
-	RTS
 	
 .solidifier	;pass through and become solid
 	CMP #TILE_SOLIDIFIER
@@ -262,18 +504,22 @@ Ball_CollisionX:
 .target ;destroy self and increase score if all 4 corners are in
 	LDY COLLISION_OFFSET
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 1
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 2
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 3
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	
@@ -297,8 +543,15 @@ Ball_CollisionX:
 Ball_CollisionY:
 	BNE .start
 	RTS ;If zero, it's an empty tile, skip
-	
+
 .start
+.border ;reflect only
+	CMP #TILE_BORDER
+	BNE .solidifier
+	JSR Ball_ReflectY
+	RTS
+	
+	
 	LDY BALL_SOLID, x
 	CPY #TRUE
 	BNE .nonSolid
@@ -335,12 +588,6 @@ Ball_CollisionY:
 	RTS
 	
 .nonSolid: ;Tiles below can be hit even if ball is non-solid
-.border ;reflect only
-	CMP #TILE_BORDER
-	BNE .solidifier
-	JSR Ball_ReflectY
-	RTS
-	
 .solidifier	;pass through and become solid
 	CMP #TILE_SOLIDIFIER
 	BNE .target
@@ -351,18 +598,22 @@ Ball_CollisionY:
 .target ;destroy self and increase score if all 4 corners are in
 	LDY COLLISION_OFFSET
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 1
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 2
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	LDY COLLISION_OFFSET + 3
 	LDA COLLISION_MAP, y
+	AND #%00011111
 	CMP #TILE_TARGET
 	BNE .placeholder
 	
@@ -659,49 +910,6 @@ _OBJ_Intro_Parachute:
 	
 .destroy: ;If parent doesn't exist, destroy self
 	JSR ObjectList_Remove
-	RTS
-	
-_OBJ_Intro_Ball_Init:
-.gen
-	JSR RNG_Next
-	AND #%00000110
-	SEC
-	SBC #4
-	STA OBJ_SPEEDX, x
-	
-	JSR RNG_Next
-	SEC
-	SBC #4
-	AND #%00000110
-	STA OBJ_SPEEDY, x
-	
-	BNE .end
-	LDA OBJ_SPEEDX, x
-	BEQ .gen ;If both speed values are 0, retry.
-.end
-	RTS
-
-_OBJ_Intro_Ball:
-.moveh
-	LDA OBJ_SPEEDX, x
-	CLC
-	ADC OBJ_XPOS, x
-	STA OBJ_XPOS, x
-	JSR Overlap_Background_Small
-.movev
-	LDA OBJ_SPEEDY, x
-	CLC
-	ADC OBJ_YPOS, x
-	STA OBJ_YPOS, x
-	JSR Overlap_Background_Small
-	
-.animate
-	LDA #0
-	STA OBJ_METASPRITE, x
-	
-.coldet
-	LDA #255
-	STA OBJ_COLLISION, x
 	RTS
 	
 ;Sets all object entries as $FF, run this once

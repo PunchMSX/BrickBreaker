@@ -332,23 +332,25 @@ Overlap_Background_Small:
 	RTS
 
 CollisionMap_Default:
-	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-	.db $FF, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	
-	.db $FF, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $FF
+	.db _Z, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF
-	.db $FF, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $FF	
-	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-	.db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	.db _Z, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _Z
+	
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _Z
+	
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	
 ;Writes unbreakable tiles around the playfield
 CollisionMap_DefaultBorder:
@@ -356,6 +358,12 @@ CollisionMap_DefaultBorder:
 	LDX #0
 .loop1
 	LDA CollisionMap_Default, x
+	TAY
+	CMP #TILE_INVALID
+	BCC .hasDurability
+	LDY #0
+.hasDurability
+	ORA Metatile_Durability, y
 	STA COLLISION_MAP, x
 	INX
 	CPX #240
@@ -369,8 +377,16 @@ CollisionMap_UploadTop:
 	LDY #0
 	LDX #0
 .loop
+	TYA
+	PHA
+	
 	LDA [CALL_ARGS], y
+	TAY
+	ORA Metatile_Durability, y
 	STA COLLISION_MAP + 48 + 1, x
+	
+	PLA
+	TAY
 	
 	INX
 	CPX #$3E

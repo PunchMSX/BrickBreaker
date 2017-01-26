@@ -199,8 +199,9 @@ _PPU_DrawMetatileRow:
 .loop1 ;writes 1st tile row
 	;Load metatile data
 	LDA [PPU_QR2], y
-	CMP #128
-	BCS .exit
+	AND #%00011111
+	CMP #%00011111
+	BEQ .exit
 	ASL A
 	ASL A
 	TAX
@@ -245,6 +246,7 @@ _PPU_DrawMetatileRow:
 .loop2 ;writes 2nd tile row
 	;Load metatile data
 	LDA [PPU_QR2], y
+	AND #%00011111
 	ASL A
 	ASL A
 	TAX
@@ -571,6 +573,7 @@ _PPU_DrawMetatile:
 	STA $2006
 	
 	LDA <PPU_QR1
+	AND #%00011111
 	ASL A
 	ASL A ;*4
 	TAX
