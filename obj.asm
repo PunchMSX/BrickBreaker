@@ -303,6 +303,7 @@ _OBJ_Ball_Init:
 	JSR RNG_Next
 	AND #%00000011
 	BEQ .gen
+	LDA #0
 	STA OBJ_SPEEDX, x
 .gen2	
 	JSR RNG_Next
@@ -341,6 +342,8 @@ _OBJ_Ball:
 .LeftRight
 	LDA #FALSE
 	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
+	LDA #$FF
+	STA COLDAMAGE_PREVTILE
 	
 	;Determine the current direction in the X axis
 	LDA OBJ_SPEEDX, x
@@ -389,6 +392,8 @@ _OBJ_Ball:
 	;Determine the current direction in the X axis
 	LDA #FALSE
 	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
+	LDA #$FF
+	STA COLDAMAGE_PREVTILE
 	
 	LDA OBJ_SPEEDY, x
 	BMI .up
@@ -448,6 +453,12 @@ _OBJ_Ball:
 DamageTile:
 	TAY
 	
+	CMP COLDAMAGE_PREVTILE ;Do this check to avoid damaging a tile twice per axis movement
+	BNE .start
+	RTS
+.start	
+	STA COLDAMAGE_PREVTILE
+
 	LDA COLLISION_MAP, y
 	AND #%11100000
 	BEQ .destroy
@@ -508,15 +519,19 @@ Ball_CollisionX:
 	BNE .solid
 	JSR Ball_ReflectX
 	RTS
-	
+;**************************************************	
 .solid
 	LDY BALL_SOLID, x
 	CPY #TRUE
 	BNE .nonSolid
-	
-	;Brick = Reflect and destroy tile
+
+	;Brick = Reflect and damage tile
 	CMP #TILE_BRICK
-	BNE .solidifier
+	BEQ .brick
+	CMP #TILE_DAMAGEDBRICK
+	BEQ .brick
+	JMP .nonSolid
+.brick
 	JSR Ball_ReflectX
 	
 	LDY <CALL_ARGS
@@ -527,6 +542,8 @@ Ball_CollisionX:
 	
 	RTS
 	
+;***************************************************
+;***************************************************
 .nonSolid: ;Tiles below can be hit even if ball is non-solid
 	
 .solidifier	;pass through and become solid
@@ -586,15 +603,19 @@ Ball_CollisionY:
 	BNE .solid
 	JSR Ball_ReflectY
 	RTS
-	
+;**************************************************	
 .solid
 	LDY BALL_SOLID, x
 	CPY #TRUE
 	BNE .nonSolid
 	
-	;Brick = Reflect and destroy tile
+	;Brick = Reflect and damage tile
 	CMP #TILE_BRICK
-	BNE .solidifier
+	BEQ .brick
+	CMP #TILE_DAMAGEDBRICK
+	BEQ .brick
+	JMP .nonSolid
+.brick
 	JSR Ball_ReflectY
 	
 	LDY <CALL_ARGS
@@ -602,8 +623,11 @@ Ball_CollisionY:
 
 	;Reminder that this destroys CALL_ARGS so we can't access the right byte in COL_OFFSET after this.
 	JSR DamageTile
+	
 	RTS
 	
+;***************************************************
+;***************************************************
 .nonSolid: ;Tiles below can be hit even if ball is non-solid
 .solidifier	;pass through and become solid
 	CMP #TILE_SOLIDIFIER

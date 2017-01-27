@@ -199,6 +199,8 @@ DEBUG_DECIMALY	.ds 3
 COLLISION_MAP	 .ds 16 * 15 ;Full screen collision map
 COLLISION_OFFSET .ds 4  ;
 COLLISION_OVERLAP .ds 4 ; # pixels overlapping with a bg tile for X and Y axis
+COLDAMAGE_PREVTILE .ds 1 ;last tile to be dealt damage with, used to avoid double damage per hit
+
 COLMAP_WIDTH = 16
 COLMAP_HEIGHT = 15
 COLMAP_SIZE = 16 * 15

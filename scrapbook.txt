@@ -138,3 +138,6 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 
 6, actually 5 days left since I was counting the submission date.
 
+27/07
+
++fixed a bug where a collision would deal double damage to the tile if both edge points were overlapping it.
