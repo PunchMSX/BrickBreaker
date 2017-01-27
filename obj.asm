@@ -337,7 +337,7 @@ _OBJ_Ball:
 	STA OBJ_INTSTATE3, x
 	LDA OBJ_YPOS, x
 	STA OBJ_INTSTATE4, x ;Backup original X,Y position
-	
+
 .LeftRight
 	LDA #FALSE
 	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
@@ -441,6 +441,60 @@ _OBJ_Ball:
 .exit
 	RTS
 	
+;This TRASHES all <Call_Args and <TEMP_BYTE so be careful!
+;A = collision map offset of the tile
+;Subtracts 1 from higher three bytes in collision map (durability value)
+;if durability = 0 then the tile is destroyed (replaced by another one with lower index #)
+DamageTile:
+	TAY
+	
+	LDA COLLISION_MAP, y
+	AND #%11100000
+	BEQ .destroy
+	LDA COLLISION_MAP, y
+	SEC
+	SBC #%00100000
+	STA COLLISION_MAP, y
+	
+	RTS ;No destruction, only damage, exit without writing
+	
+	
+.destroy ;Downgrade tile to lower id # and reload durability
+	LDA COLLISION_MAP, y
+	SEC
+	SBC #1
+	AND #%00011111 ;The next tile that shows damage will have a lower index #.
+	
+	STY <TEMP_BYTE
+	TAY
+	ORA Metatile_Durability, y ;Apply default durability to our new "damaged" metatile.
+	LDY <TEMP_BYTE
+	STA COLLISION_MAP, y
+	
+.schedule ;Send it to the queue to be drawn next vBlank.
+	AND #%00011111
+	STA <CALL_ARGS ;Metatile ID
+	
+	TYA
+	AND #%00001111
+	STA <CALL_ARGS + 1 ;X position (index % 16)
+	
+	TYA
+	LSR A
+	LSR A
+	LSR A
+	LSR A
+	STA <CALL_ARGS + 2 ;Y position (index / 16)
+	
+	PHX
+	;This is UNSAFE for X and will make the game hard crash since it overwrites the object id
+	;in X with garbage, so that's why we back up that register.
+	JSR PPU_DrawMetatile
+	PLX
+
+.end
+	RTS
+	
 
 ;Evaluates collision against a tile that the object overlaps.
 ;A = type of tile overlapped, X = obj id	
@@ -467,28 +521,9 @@ Ball_CollisionX:
 	
 	LDY <CALL_ARGS
 	LDA COLLISION_OFFSET, y
-	TAY
-	LDA #TILE_RUBBLE
-	STA COLLISION_MAP, y
 	
-	;Order the PPU to redraw the removed tile from the screen.
-	STA <CALL_ARGS
-	
-	TYA
-	LSR A
-	LSR A
-	LSR A
-	LSR A
-	STA <CALL_ARGS + 2
-	
-	TYA
-	AND #%00001111
-	STA <CALL_ARGS + 1
-	
-	PHX
-	;This is UNSAFE for X and will make the game hard crash if X is not properly backed up.
-	JSR PPU_DrawMetatile
-	PLX
+	;Reminder that this destroys CALL_ARGS so we can't access the right byte in COL_OFFSET after this.
+	JSR DamageTile
 	
 	RTS
 	
@@ -540,6 +575,7 @@ Ball_CollisionX:
 	
 ;Evaluates collision against a tile that the object overlaps.
 ;A = type of tile overlapped, X = obj id	
+;<Call_Args = COLLISION_OFFSET index (1-4)
 Ball_CollisionY:
 	BNE .start
 	RTS ;If zero, it's an empty tile, skip
@@ -547,44 +583,25 @@ Ball_CollisionY:
 .start
 .border ;reflect only
 	CMP #TILE_BORDER
-	BNE .solidifier
+	BNE .solid
 	JSR Ball_ReflectY
 	RTS
 	
-	
+.solid
 	LDY BALL_SOLID, x
 	CPY #TRUE
 	BNE .nonSolid
 	
 	;Brick = Reflect and destroy tile
 	CMP #TILE_BRICK
-	BNE .border
+	BNE .solidifier
 	JSR Ball_ReflectY
 	
 	LDY <CALL_ARGS
 	LDA COLLISION_OFFSET, y
-	TAY
-	LDA #TILE_RUBBLE
-	STA COLLISION_MAP, y
-		
-	;Order the PPU to redraw the removed tile from the screen.
-	STA <CALL_ARGS
-	
-	TYA
-	LSR A
-	LSR A
-	LSR A
-	LSR A
-	STA <CALL_ARGS + 2
-	
-	TYA
-	AND #%00001111
-	STA <CALL_ARGS + 1
-	
-	PHX
-	;This is UNSAFE for X and will make the game hard crash if X is not properly backed up.
-	JSR PPU_DrawMetatile
-	PLX
+
+	;Reminder that this destroys CALL_ARGS so we can't access the right byte in COL_OFFSET after this.
+	JSR DamageTile
 	RTS
 	
 .nonSolid: ;Tiles below can be hit even if ball is non-solid

@@ -119,3 +119,22 @@ So much work done!
 
 -Note: sprite collision detection loops were created with the assumption that we needed to check for collisions only on objects after the one we're checking against. Remember to fix this later.
 -Todo: actually use the durability bits in the ball's collision routine
+
+7 days left.!.
+
+26/06
+
++Fought this horrible bug that was causing wrong ejection in the Y axis. Turns out it wasn't working at all for bricks on the Y direction, and to discover that it was caused by jumping to wrong labels took a whole day. NOTE TO SELF: WHEN MODIFYING THE BALL COLLISION ROUTINE, CHECK THE PROGRAM FLOW THROUGHLY
+Hilariously enough, this bug survived into the last commit without me noticing. :X
+
+***Metatile to Sprite overlap routine might be slightly off. It's hard to analyze it but I need to confirm if it's working properly.
+	one thing that bothers me is that sometimes the hit with the solidifier dotted line will be registered, sometimes not. I have the impression that it was working ALWAYS on two pushes ago but I'm not sure if the SOLID property was implemented yet.
+	Otherwise it's correct since the center of the object spawned is already outside the line, and it first moves and then checks for tile collisions (so any speed >=2 in the Y axis will make the ball "escape" from the dotted line and not solidify).
+	+EDIT: Checked, two commits ago the ball always seemed to be solid simply because the SOLID property wasn't defined and/or verified yet. Mystery solved.
+	
++Ball starting point moved 8px up on debug state to rectify problem highlighted in above note.
+
+-Investigate if the DamageTile routine is working correctly in relation to # of damage dealt.
+
+6, actually 5 days left since I was counting the submission date.
+

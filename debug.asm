@@ -114,7 +114,7 @@ Debug_MapEdit:
 	
 	LDA #OBJ_BALL
 	LDX #128
-	LDY #128
+	LDY #120
 	JSR ObjectList_Insert ;X and Y aren't needed since the ball randomizes its position on init
 	RTS
 	
@@ -178,6 +178,8 @@ Debug_MapEdit:
 	AND #CTRL_B
 	BNE .buttonA
 	
+	BIT $6666
+	
 	LDA #TILE_BRICK
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
@@ -186,13 +188,20 @@ Debug_MapEdit:
 	STA <CALL_ARGS + 2
 	JSR PPU_DrawMetatile
 	
+	
+	LDA #TILE_BRICK
+	TAY
+	ORA Metatile_Durability, y
+	PHA
+	
 	LDA DEBUG_CURSORY
 	TAY
 	LDA MUL16_Table, y
 	CLC
 	ADC DEBUG_CURSORX
 	TAY
-	LDA #TILE_BRICK
+	
+	PLA
 	STA COLLISION_MAP, y
 
 .buttonA:
