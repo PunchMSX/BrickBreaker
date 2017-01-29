@@ -476,6 +476,19 @@ ANGLE_300 = 9
 ANGLE_315 = 10
 ANGLE_330 = 11
 
+A_30 = ANGLE_30
+A_45 = ANGLE_45
+A_60 = ANGLE_60
+A_120 = ANGLE_120
+A_135 = ANGLE_135
+A_150 = ANGLE_150
+A_210 = ANGLE_210
+A_225 = ANGLE_225
+A_240 = ANGLE_240
+A_300 = ANGLE_300
+A_315 = ANGLE_315
+A_330 = ANGLE_330
+
 ;This table shows the amount of pixels
 ;that you should travel in the x/y directions
 ;in order to move with a certain speed (1-8)

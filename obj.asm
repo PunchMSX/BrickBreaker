@@ -155,8 +155,8 @@ Umbrella_HeightMap_Table:
 	.db 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 4
 	
 Umbrella_Angle_Table:
-	.db -2, -2, -2, -2, -1, -1, -1, -1, 0, 0, 0
-	.db 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2
+	.db A_210, A_210, A_210, A_210, A_225, A_225, A_225, A_225, A_240, A_240, A_240
+	.db A_300, A_300, A_300, A_315, A_315, A_315, A_315, A_330, A_330, A_330, A_330
 	
 Umbrella_Collision:
 	LDY #255
@@ -181,8 +181,12 @@ Umbrella_Collision:
 	STA OBJ_COLLISION, x
 	PHA
 	
-	LDA OBJ_SPEEDY, y
-	BPL .checkHeight
+	;Proceed to collision only if ball is going downwards.
+	LDA BALL_ANGLE, y
+	CMP #ANGLE_210
+	BCC .checkHeight
+	
+	;Going upwards (aka already reflected), ignore.
 	PLA
 	TAY
 	JMP .loop
@@ -219,10 +223,10 @@ Umbrella_Collision:
 	STA <TEMP_BYTE + 1
 	
 	;Get how much (by pixels) the ball is inside the umbrella
-	LDA <TEMP_BYTE
+	LDA <TEMP_BYTE ;Y position
 	SEC
 	SBC OBJ_YPOS, x
-	STA <TEMP_BYTE
+	STA <TEMP_BYTE ;Y Overlap
 	
 	;get the difference in X between sprites
 	PLA
@@ -233,12 +237,12 @@ Umbrella_Collision:
 	
 	;Decides whether to use the left or right corner pos. depending on the object's position
 	BPL .rightside
-	LDA <TEMP_BYTE + 2
+	LDA <TEMP_BYTE + 2 ;x2
 	SEC
 	SBC OBJ_XPOS, x
 	JMP .getindex
 .rightside
-	LDA <TEMP_BYTE + 1
+	LDA <TEMP_BYTE + 1 ;x1
 	SEC
 	SBC OBJ_XPOS, x
 	
@@ -247,25 +251,19 @@ Umbrella_Collision:
 	ADC #11 ;table begins in pixel position -11
 	BPL .checkHeightTable ;if minus, outside collision box
 	JMP .loop
+	
 .checkHeightTable
 	STY <TEMP_BYTE + 3 ;ball obj id
 	TAY ;Y = ball x pos irt umbrella
 	LDA Umbrella_HeightMap_Table, y
-	CMP <TEMP_BYTE
+	CMP <TEMP_BYTE ;ball Y pos
 	BCS .returnloop ;smaller height, return to loop and investigate next
 	
-	;reflect according to angle
+	;Load reflection angle from LUT
 	LDA Umbrella_Angle_Table, y
-	STA <TEMP_BYTE + 4
-	LDY <TEMP_BYTE + 3
-	
-.reflect
-	LDA OBJ_SPEEDY, y
-	NEG
-	STA OBJ_SPEEDY, y
-	
-	LDA <TEMP_BYTE + 4
-	STA OBJ_SPEEDX, y
+	LDY <TEMP_BYTE + 3 ;ball id
+	;Store "reflection" in the ball's angle intstate
+	STA BALL_ANGLE, y
 	
 	RTS ;there might be more balls colliding but that's checked next frame only.
 	
@@ -390,7 +388,7 @@ Ball_MoveY:
 	;it's only stored in the non fraction part of the number.
 	LDA BALL_ANGLE, x
 	CMP #ANGLE_210
-	BCS .pos
+	BCC .pos
 	JMP .neg
 .nonzero
 	BMI .neg
@@ -634,6 +632,7 @@ _OBJ_Ball:
 	STA OVERLAP_OFFSET
 	
 .udcheck
+		BIT $6667
 		JSR Ball_MoveY
 		
 		;Checks the top/bottom right points for collisions
@@ -920,6 +919,9 @@ Ball_ReflectX:
 	ADC COLLISION_OVERLAP
 	STA OBJ_XPOS, x		;Restore previous position if collision happened
 	
+	LDA #0
+	STA BALL_FINEY, x
+	
 	;Reflect
 	LDA BALL_ANGLE, x
 	JSR Angle_ReflectX
@@ -963,6 +965,9 @@ Ball_ReflectY:
 	CLC
 	ADC COLLISION_OVERLAP + 2
 	STA OBJ_YPOS, x		;Restore previous position if collision happened
+	
+	LDA #0
+	STA BALL_FINEY, x
 	
 	;Reflect
 	LDA BALL_ANGLE, x
