@@ -122,7 +122,7 @@ So much work done!
 
 7 days left.!.
 
-26/06
+26/01
 
 +Fought this horrible bug that was causing wrong ejection in the Y axis. Turns out it wasn't working at all for bricks on the Y direction, and to discover that it was caused by jumping to wrong labels took a whole day. NOTE TO SELF: WHEN MODIFYING THE BALL COLLISION ROUTINE, CHECK THE PROGRAM FLOW THROUGHLY
 Hilariously enough, this bug survived into the last commit without me noticing. :X
@@ -138,6 +138,18 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 
 6, actually 5 days left since I was counting the submission date.
 
-27/07
+27/01
 
 +fixed a bug where a collision would deal double damage to the tile if both edge points were overlapping it.
+
+-Umbrella/paddle collision doesn't work because it requires actual angles and we don't simulate that at all, instead of just setting the X speed we need to actually calculate the x/y vectors for the angles properly and add that into a table.
+-For the above we'll also need a MUL table.
+-Started work on a Lookup Table for 30, 45 and 60 degrees movement with speeds (vector length) 1 to 8 to aid in proper angle movement for the balls. Need to rewrite parts of OBJ_BALL to work with it, and possibly the reflect function (if comparing the new and old positions for determining direction is unreliable)
+
+4 days left... hoping for a deadline pushback on NESDev (right now it's 9 votes for pushing the submission date back vs 4).
+
+28/01
+
++True 30,45,60 degree angle movement with subpixel precision for balls implemented.
+
+-...but there's a problem when the ball speed is equal to 1. Might be related to how the program always thinks a number is positive if its integer part is equal to zero (since only the integer part is signed). There's a fix that considers zero as a special case in Ball_MoveX/Y but if the problem is there it probably doesn't work. Check all subroutines that use the displacement values to figure out direction through +/- check (BMI/BPL).

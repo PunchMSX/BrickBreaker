@@ -159,6 +159,9 @@ MATCH_P2SCOREBUF .ds 1 ;A buffer which balls increment when they hit the goal.
 
 MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writes before the match starts.
 
+ANGLE_SPEEDX	.ds 2
+ANGLE_SPEEDY	.ds 2 ;used in obj.asm for angled ball movement
+
 MATCH_P1SCORE_PPU = $204A
 MATCH_P2SCORE_PPU = $2054
 MATCH_TIMER_PPU   = $204F
@@ -199,7 +202,17 @@ DEBUG_DECIMALY	.ds 3
 COLLISION_MAP	 .ds 16 * 15 ;Full screen collision map
 COLLISION_OFFSET .ds 4  ;
 COLLISION_OVERLAP .ds 4 ; # pixels overlapping with a bg tile for X and Y axis
+
+
 COLDAMAGE_PREVTILE .ds 1 ;last tile to be dealt damage with, used to avoid double damage per hit
+
+OBJ_OLDX .ds 1
+OBJ_OLDY .ds 1 ;Temp vars for object displacement
+
+OVERLAP_OFFSET .ds 1
+BALL_REFLECTED .ds 1 ;Temp vars for ball collision with BG
+
+
 
 COLMAP_WIDTH = 16
 COLMAP_HEIGHT = 15

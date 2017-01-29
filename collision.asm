@@ -431,3 +431,74 @@ MUL16_Table:
 	.db 16 * 14
 	.db 16 * 15
 
+Angle_Invert:
+	CLC
+	ADC #6
+	CMP #12
+	BCS .overflow
+	RTS
+	
+.overflow
+	SEC
+	SBC #12
+	RTS
+	
+;A = angle
+Angle_ReflectY:
+	SEC
+	SBC #11
+	NEG
+	RTS
+	
+Angle_ReflectX:
+	CMP #6
+	BCS .hi
+	SEC
+	SBC #5
+	NEG
+	RTS
+.hi
+	SEC
+	SBC #17
+	NEG
+	RTS
+	
+ANGLE_30 = 0
+ANGLE_45 = 1
+ANGLE_60 = 2
+ANGLE_120 = 3
+ANGLE_135 = 4
+ANGLE_150 = 5
+ANGLE_210 = 6
+ANGLE_225 = 7
+ANGLE_240 = 8
+ANGLE_300 = 9
+ANGLE_315 = 10
+ANGLE_330 = 11
+
+;This table shows the amount of pixels
+;that you should travel in the x/y directions
+;in order to move with a certain speed (1-8)
+;in 30, 45 or 60 degrees.
+Vector_Angle_Table:
+	.db 0, 1, 2, 3, 4, 5, 6, 6 ;30 degree X
+	.db 0, 1, 1, 2, 2, 3, 3, 4 ;30 degree Y
+	
+	.db 0, 1, 2, 2, 3, 4, 4, 5 ;45 degree X
+	.db 0, 1, 2, 2, 3, 4, 4, 5 ;45 degree Y
+	
+	.db 0, 1, 1, 2, 2, 3, 3, 4 ;60 degree X
+	.db 0, 1, 2, 3, 4, 5, 6, 6 ;60 degree Y
+	
+;base 256 fractions to represent the angle as floating point
+Vector_Fraction_Table:
+	.db 223, 186, 153, 119, 84, 50, 23, 246 ;30 deg X
+	.db 128, 0, 128, 0, 128, 0, 128, 0 ;30 deg Y
+	.db 181, 106, 31, 212, 137, 62, 243, 168 ;45 deg X
+	.db 181, 106, 31, 212, 137, 62, 243, 168 ;45 deg Y
+	.db 128, 0, 128, 0, 128, 0, 128, 0 ;60 deg X
+	.db 223, 186, 153, 119, 84, 50, 23, 246 ;60 deg Y
+	
+	
+	
+	

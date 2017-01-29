@@ -1,10 +1,13 @@
 OBJ_SPEEDX = OBJ_INTSTATE1
-OBJ_SPEEDY = OBJ_INTSTATE2	
-OBJ_OLDX = OBJ_INTSTATE3
-OBJ_OLDY = OBJ_INTSTATE4
+OBJ_SPEEDY = OBJ_INTSTATE2
 
-BALL_SOLID = OBJ_INTSTATE5
-BALL_SELFDESTRUCT = OBJ_INTSTATE7
+BALL_SPEED = OBJ_INTSTATE1	
+BALL_ANGLE = OBJ_INTSTATE2
+BALL_FINEX = OBJ_INTSTATE3
+BALL_FINEY = OBJ_INTSTATE4
+
+BALL_SOLID = OBJ_INTSTATE7
+BALL_SELFDESTRUCT = OBJ_INTSTATE8
 
 PLAYER_UMBRELLAID = OBJ_INTSTATE5
 UMB_PARENTID = OBJ_INTSTATE1
@@ -22,6 +25,9 @@ OBJ_STATIC = 6
 
 OBJ_PLAYER = 7
 OBJ_UMBRELLA = 8
+
+OBJ_ENEMY = 9
+OBJ_ENEMY_SHIELD = 10
 
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
@@ -52,6 +58,12 @@ ObjectInit_Table:
 	
 	.dw _OBJ_Player_Init - 1
 	.dw _OBJ_Umbrella_Init - 1
+	
+	.dw _OBJ_Enemy_Init - 1
+	.dw _OBJ_Enemy_Shield_Init - 1
+	
+_OBJ_Enemy_Init:
+_OBJ_Enemy_Shield_Init:
 	
 _OBJ_Player_Init:
 	LDY #0
@@ -287,7 +299,8 @@ _OBJ_Umbrella:
 	JSR Umbrella_Collision
 	
 .endcollision
-
+	RTS
+	
 ;This is made to be positioned and metasprite'd by any external subroutine
 ;	aka this can be any metasprite.	
 _OBJ_Static:
@@ -299,74 +312,287 @@ _OBJ_Ball_Init:
 	LDA #FALSE
 	STA BALL_SOLID, x
 	
-.gen
+.genAngle
 	JSR RNG_Next
-	AND #%00000011
-	BEQ .gen
-	LDA #0
-	STA OBJ_SPEEDX, x
-.gen2	
+	AND #%00011111
+	CMP #12
+	BCS .genAngle
+	STA BALL_ANGLE, x
+.genSpeed
 	JSR RNG_Next
-	AND #%00000011
-	BEQ .gen2
-	STA OBJ_SPEEDY, x
+	AND #%00000111
+	BEQ .genSpeed
+	CMP #7
+	BCS .genSpeed
+	STA BALL_SPEED, x
+	JMP .end
 	
-	JSR RNG_Next
-	AND #%00000001
-	BEQ .gen4
-	LDA OBJ_SPEEDX, x
-	NEG
-	STA OBJ_SPEEDX, x
-	JMP .gen4
-.gen4
+	
+;This is skipped for now ************************************88
+.gen
 	JSR RNG_Next
 	AND #%00000001
 	BEQ .end
-	LDA OBJ_SPEEDY, x
+	LDA BALL_SPEED, x
 	NEG
-	STA OBJ_SPEEDY, x
-	
+	STA BALL_SPEED, x
+
 .end
 	RTS
 	
+Ball_MoveX:
+	LDA ANGLE_SPEEDX
+	BNE .nonzero
+	;If zero, we don't have the sign information since
+	;it's only stored in the non fraction part of the number.
+	LDA BALL_ANGLE, x
+	CMP #ANGLE_120
+	BCC .pos
+	CMP #ANGLE_300
+	BCS .pos
+	JMP .neg
+.nonzero
+	BMI .neg
+.pos
+	LDA BALL_FINEX, x
+	CLC
+	ADC ANGLE_SPEEDX + 1 ;Add fine (decimal) X
+	STA BALL_FINEX, x
+	
+	;Do not clear carry so overflow carries over
+	LDA OBJ_XPOS, x
+	ADC ANGLE_SPEEDX
+	STA OBJ_XPOS, x
+	
+	RTS
+.neg
+	LDA BALL_FINEX, x
+
+	SEC
+	SBC ANGLE_SPEEDX + 1
+	STA BALL_FINEX, x
+	PHP ;save carry
+	
+	LDA ANGLE_SPEEDX
+	NEG
+	STA <TEMP_BYTE
+	PLP
+	LDA OBJ_XPOS, x
+	SBC <TEMP_BYTE
+	STA OBJ_XPOS, x
+	
+	RTS
+	
+Ball_MoveY:
+	LDA ANGLE_SPEEDY
+	BNE .nonzero
+	;If zero, we don't have the sign information since
+	;it's only stored in the non fraction part of the number.
+	LDA BALL_ANGLE, x
+	CMP #ANGLE_210
+	BCS .pos
+	JMP .neg
+.nonzero
+	BMI .neg
+.pos
+	LDA BALL_FINEY, x
+	CLC
+	ADC ANGLE_SPEEDY + 1 ;Add fine (decimal) X
+	STA BALL_FINEY, x
+	
+	;Do not clear carry so overflow carries over
+	LDA OBJ_YPOS, x
+	ADC ANGLE_SPEEDY
+	STA OBJ_YPOS, x
+	
+	RTS
+.neg
+	LDA BALL_FINEY, x
+
+	SEC
+	SBC ANGLE_SPEEDY + 1
+	STA BALL_FINEY, x
+	PHP ;save carry
+	
+	LDA ANGLE_SPEEDY
+	NEG
+	STA <TEMP_BYTE
+	PLP
+	LDA OBJ_YPOS, x
+	SBC <TEMP_BYTE
+	STA OBJ_YPOS, x
+	
+	RTS
+	
+;Destroys Y.
+;Reads from the vector angle table the appropriate amount of pixels to displace
+;according to the angle and speed of the object.
+Ball_GetAngleMovement:
+	LDA BALL_ANGLE, x
+	CMP #ANGLE_120
+	BCC .q1
+	CMP #ANGLE_210
+	BCC .q2
+	CMP #ANGLE_300
+	BCC .q3
+	JMP .q4
+	
+.q1 ;30, 45, 60 degrees
+	ASL A
+	ASL A
+	ASL A
+	ASL A ;Multiply by 16 to get offset to x/y values of the angle.
+	
+	CLC
+	ADC BALL_SPEED, x ;index for reading X displacement value for the current speed and angle.
+	SEC
+	SBC #1
+	
+	TAY
+	LDA Vector_Angle_Table, y
+	STA ANGLE_SPEEDX     ;Coarse X
+	LDA Vector_Angle_Table + 8, y
+	STA ANGLE_SPEEDY ;Coarse Y
+	
+	LDA Vector_Fraction_Table, y
+	STA ANGLE_SPEEDX + 1    ; Fine X
+	LDA Vector_Fraction_Table + 8, y
+	STA ANGLE_SPEEDY + 1; Fine Y
+	
+	
+	RTS
+	
+.q2 ;120, 135, 150 degrees... invert table read order and negate X (length * -cos(Angle))
+	SEC
+	SBC #5 ;120, 135 and 150 have similar values to 60, 45, 30
+	NEG    ;
+	
+	ASL A
+	ASL A
+	ASL A
+	ASL A ;Multiply by 16 to get offset to x/y values of the angle.
+	
+	CLC
+	ADC BALL_SPEED, x ;index for reading X displacement value for the current speed and angle.
+	SEC
+	SBC #1
+	
+	TAY
+	LDA Vector_Angle_Table, y
+	NEG
+	STA ANGLE_SPEEDX     ;Coarse X
+	LDA Vector_Angle_Table + 8, y
+	STA ANGLE_SPEEDY ;Coarse Y
+	
+	LDA Vector_Fraction_Table, y
+	STA ANGLE_SPEEDX + 1    ; Fine X
+	LDA Vector_Fraction_Table + 8, y
+	STA ANGLE_SPEEDY + 1; Fine Y
+	
+	RTS
+
+
+.q3; 210, 225, 240 degrees... normal table order but negated X, Y
+	SEC
+	SBC #ANGLE_210
+	
+	ASL A
+	ASL A
+	ASL A
+	ASL A ;Multiply by 16 to get offset to x/y values of the angle.
+	
+	CLC
+	ADC BALL_SPEED, x ;index for reading X displacement value for the current speed and angle.
+	SEC
+	SBC #1
+	
+	TAY
+	LDA Vector_Angle_Table, y
+	NEG
+	STA ANGLE_SPEEDX     ;Coarse X
+	LDA Vector_Angle_Table + 8, y
+	NEG
+	STA ANGLE_SPEEDY ;Coarse Y
+	
+	LDA Vector_Fraction_Table, y
+	STA ANGLE_SPEEDX + 1    ; Fine X
+	LDA Vector_Fraction_Table + 8, y
+	STA ANGLE_SPEEDY + 1; Fine Y
+	
+	RTS
+
+.q4 ;300, 315, 300 degrees... flip table order, negate Y only
+	SEC
+	SBC #ANGLE_330 ;120, 135 and 150 have similar values to 60, 45, 30
+	NEG    ;
+	
+	ASL A
+	ASL A
+	ASL A
+	ASL A ;Multiply by 16 to get offset to x/y values of the angle.
+	
+	CLC
+	ADC BALL_SPEED, x ;index for reading X displacement value for the current speed and angle.
+	SEC
+	SBC #1
+	
+	TAY
+	LDA Vector_Angle_Table, y
+	STA ANGLE_SPEEDX     ;Coarse X
+	LDA Vector_Angle_Table + 8, y
+	NEG
+	STA ANGLE_SPEEDY ;Coarse Y
+	
+	LDA Vector_Fraction_Table, y
+	STA ANGLE_SPEEDX + 1    ; Fine X
+	LDA Vector_Fraction_Table + 8, y
+	STA ANGLE_SPEEDY + 1; Fine Y
+	
+	RTS
+
 	
 _OBJ_Ball:
 	LDA #FALSE
 	STA BALL_SELFDESTRUCT
 	
 	LDA OBJ_XPOS, x
-	STA OBJ_INTSTATE3, x
+	STA OBJ_OLDX
 	LDA OBJ_YPOS, x
-	STA OBJ_INTSTATE4, x ;Backup original X,Y position
+	STA OBJ_OLDY ;Backup original X,Y position
+	
+	JSR Ball_GetAngleMovement
 
 .LeftRight
 	LDA #FALSE
-	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
+	STA BALL_REFLECTED ;This will be a true/false switch so we don't reflect twice.
 	LDA #$FF
 	STA COLDAMAGE_PREVTILE
 	
 	;Determine the current direction in the X axis
-	LDA OBJ_SPEEDX, x
-	BMI .left
+	LDA BALL_ANGLE, x
+	CMP #ANGLE_120
+	BCC .right
+	CMP #ANGLE_300
+	BCS .right
+	JMP .left
+	
+.right
 	LDA #1
-	STA OBJ_INTSTATE8
+	STA OVERLAP_OFFSET
 	JMP .lrcheck
 .left
 	LDA #0
-	STA OBJ_INTSTATE8
+	STA OVERLAP_OFFSET
 	
 .lrcheck
-		LDA OBJ_SPEEDX, x
-		CLC
-		ADC OBJ_XPOS, x
-		STA OBJ_XPOS, x
+		JSR Ball_MoveX
 		
 		;Checks the top/bottom right points for collisions
 		JSR Overlap_Background_Small
 		
 		LDA #0
 		CLC
-		ADC OBJ_INTSTATE8
+		ADC OVERLAP_OFFSET
 		STA <CALL_ARGS ;Top Right/Left tile
 		
 		TAY
@@ -378,7 +604,7 @@ _OBJ_Ball:
 		
 		LDA #2
 		CLC
-		ADC OBJ_INTSTATE8
+		ADC OVERLAP_OFFSET
 		STA <CALL_ARGS ;Bottom Right/Left tile
 		
 		TAY
@@ -391,32 +617,31 @@ _OBJ_Ball:
 .UpDown
 	;Determine the current direction in the X axis
 	LDA #FALSE
-	STA OBJ_INTSTATE6, x ;This will be a true/false switch so we don't reflect twice.
+	STA BALL_REFLECTED ;This will be a true/false switch so we don't reflect twice.
 	LDA #$FF
 	STA COLDAMAGE_PREVTILE
 	
-	LDA OBJ_SPEEDY, x
-	BMI .up
-	
+	;Determine the current direction in the X axis
+	LDA BALL_ANGLE, x
+	CMP #ANGLE_210
+	BCS .up
+.down	
 	LDA #2
-	STA OBJ_INTSTATE8
+	STA OVERLAP_OFFSET
 	JMP .udcheck
 .up
 	LDA #0
-	STA OBJ_INTSTATE8
+	STA OVERLAP_OFFSET
 	
 .udcheck
-		LDA OBJ_SPEEDY, x
-		CLC
-		ADC OBJ_YPOS, x
-		STA OBJ_YPOS, x
+		JSR Ball_MoveY
 		
 		;Checks the top/bottom right points for collisions
 		JSR Overlap_Background_Small
 		
 		LDA #0
 		CLC
-		ADC OBJ_INTSTATE8
+		ADC OVERLAP_OFFSET
 		STA <CALL_ARGS ;Top/bottom left tile
 		
 		TAY
@@ -428,7 +653,7 @@ _OBJ_Ball:
 		
 		LDA #1
 		CLC
-		ADC OBJ_INTSTATE8
+		ADC OVERLAP_OFFSET
 		STA <CALL_ARGS ;Bottom Right/Left tile
 		
 		TAY
@@ -682,13 +907,13 @@ Ball_ReflectX:
 
 	;Check if overlap values are nonzero.
 	;If nonzero, this already ran once in this frame.
-	LDA OBJ_INTSTATE6, x
+	LDA BALL_REFLECTED
 	BEQ .start
 	RTS
 
 .start
 	LDA OBJ_XPOS, x
-	CMP OBJ_INTSTATE3, x
+	CMP OBJ_OLDX
 	BCS .lr
 .rl
 	CLC
@@ -696,9 +921,9 @@ Ball_ReflectX:
 	STA OBJ_XPOS, x		;Restore previous position if collision happened
 	
 	;Reflect
-	LDA OBJ_SPEEDX, x
-	NEG
-	STA OBJ_SPEEDX, x
+	LDA BALL_ANGLE, x
+	JSR Angle_ReflectX
+	STA BALL_ANGLE, x
 
 	JMP .exit
 .lr
@@ -709,13 +934,13 @@ Ball_ReflectX:
 	DEC OBJ_XPOS, x
 	
 	;Reflect
-	LDA OBJ_SPEEDX, x
-	NEG
-	STA OBJ_SPEEDX, x
+	LDA BALL_ANGLE, x
+	JSR Angle_ReflectX
+	STA BALL_ANGLE, x
 		
 .exit
 	LDA #1
-	STA OBJ_INTSTATE6, x
+	STA BALL_REFLECTED
 	RTS
 	
 Ball_ReflectY:
@@ -727,22 +952,22 @@ Ball_ReflectY:
 
 	;Check if overlap values are nonzero.
 	;If nonzero, this already ran once in this frame.
-	LDA OBJ_INTSTATE6, x
+	LDA BALL_REFLECTED
 	BEQ .start
 	RTS
 
 .start
 	LDA OBJ_YPOS, x
-	CMP OBJ_INTSTATE4, x
+	CMP OBJ_OLDY
 	BCS .ud
 	CLC
 	ADC COLLISION_OVERLAP + 2
 	STA OBJ_YPOS, x		;Restore previous position if collision happened
 	
 	;Reflect
-	LDA OBJ_SPEEDY, x
-	NEG
-	STA OBJ_SPEEDY, x
+	LDA BALL_ANGLE, x
+	JSR Angle_ReflectY
+	STA BALL_ANGLE, x
 	
 	JMP .exit
 .ud
@@ -752,13 +977,13 @@ Ball_ReflectY:
 	DEC OBJ_YPOS, x
 	
 	;Reflect
-	LDA OBJ_SPEEDY, x
-	NEG
-	STA OBJ_SPEEDY, x
+	LDA BALL_ANGLE, x
+	JSR Angle_ReflectY
+	STA BALL_ANGLE, x
 		
 .exit
 	LDA #1
-	STA OBJ_INTSTATE6, x
+	STA BALL_REFLECTED
 	RTS
 	
 	
