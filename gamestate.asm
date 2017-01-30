@@ -4,7 +4,7 @@ STATE_INSTRUCTIONS = 0
 STATE_TITLE = 1
 STATE_HISCORE = 2
 STATE_GAME = 3
-STATE_PUZZLEGAME = 4
+STATE_TIMEUP = 4
 STATE_GAMEOVER = 5
 STATE_ENDING_WIN = 6
 STATE_DEBUG = 7
@@ -23,7 +23,7 @@ GameState_Table:
 	.dw Title_Loop - 1 ;titlescr.asm
 	.dw State_HighScore - 1 ;titlescr.asm
 	.dw State_Match - 1
-	.dw 0 ;puzzlegame
+	.dw 0 ;timeup
 	.dw 0 ;gameover
 	.dw 0 ;ending_win
 	.dw Debug_MapEdit - 1 ;debug.asm
@@ -33,7 +33,7 @@ GameStateInit_Table:
 	.dw Title_Init - 1 ;titlescr.asm
 	.dw State_HiScore_Init - 1 ;titlescr.asm
 	.dw State_Match_Init - 1
-	.dw 0 ;puzzlegame
+	.dw 0 ;timeup
 	.dw 0 ;gameover
 	.dw 0 ;ending_win
 	.dw Debug_MapEdit_Init - 1 ;debug.asm
@@ -83,19 +83,47 @@ Match0_StateMachine:
 	.db OPC_Delay, 60
 	
 	.db OPC_DrawMetatileRow
-	.dw $20C2, COLLISION_MAP + 49
+	.dw $2082, COLLISION_MAP + 33
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2102, COLLISION_MAP + 49 + 16 * 1
+	.dw $2082 + 64 * 1, COLLISION_MAP + 33 + 16 * 1
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2142, COLLISION_MAP + 49 + 16 * 2
+	.dw $2082 + 64 * 2, COLLISION_MAP + 33 + 16 * 2
 	.db 14
 	
 	.db OPC_DrawMetatileRow
-	.dw $2182, COLLISION_MAP + 49 + 16 * 3
+	.dw $2082 + 64 * 3, COLLISION_MAP + 33 + 16 * 3
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 4, COLLISION_MAP + 33 + 16 * 4
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 5, COLLISION_MAP + 33 + 16 * 5
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 6, COLLISION_MAP + 33 + 16 * 6
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 7, COLLISION_MAP + 33 + 16 * 7
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 8, COLLISION_MAP + 33 + 16 * 8
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 9, COLLISION_MAP + 33 + 16 * 9
+	.db 14
+	
+	.db OPC_DrawMetatileRow
+	.dw $2082 + 64 * 10, COLLISION_MAP + 33 + 16 * 10
 	.db 14
 	
 	.db OPC_Delay, 50
@@ -136,10 +164,10 @@ Match0_StateMachine:
 	
 	.db OPC_RAMWrite
 	.dw MATCH_START
-	.db TRUE
+	.db 2
 	
 	.db OPC_DrawMetatileRow
-	.dw $21C2, COLLISION_MAP + 49 + 16 * 4
+	.dw $21C2, COLLISION_MAP + 33 + 16 * 5
 	.db 14
 	
 	.db OPC_Halt
@@ -157,18 +185,14 @@ State_Match_Init:
 	TZP16 CALL_ARGS, Match_EnemyMaps
 	JSR CollisionMap_UploadMap
 	
-	;Resets score
 	LDA #0
-	STA MATCH_P1SCORE
-	STA MATCH_P2SCORE
 	;Resets Frame Timer
 	STA MATCH_FRAMES
 	LDA #MATCH_TIMER_DEFAULT
 	STA MATCH_TIMER
-	;Resets # of balls
-	LDA #MATCH_BALL_MAX
-	STA MATCH_P1BALLS
-	STA MATCH_P2BALLS
+	
+	LDA #$FF
+	STA MATCH_BALLID
 	
 	LDA #FALSE
 	STA MATCH_START
@@ -178,6 +202,11 @@ State_Match_Init:
 State_Match:
 	LDA MATCH_LEVEL
 	BNE .cont
+	LDA #MATCH_LIVES_DEFAULT
+	STA MATCH_P1LIFE
+	LDA #0
+	STA MATCH_P1SCORE
+	STA MATCH_P1SCORE + 1
 	
 	LDA #STATE_INSTRUCTIONS
 	JSR GameState_Change
@@ -189,16 +218,51 @@ State_Match:
 	LDA MATCH_START
 	CMP #FALSE
 	BEQ .exit
+	CMP #TRUE
+	BEQ Match_Play
 	
+	CMP #2
+	BEQ Match_Play_Init
+	
+.exit
+	RTS
+	
+Match_Play_Init:
+	LDA #TRUE
+	STA MATCH_START
+	
+	LDX #$78
+	LDY #$C2
+	LDA #OBJ_PLAYER
+	JSR ObjectList_Insert
+	
+	PHA
+	
+	LDA #OBJ_BALL_LAUNCHER
+	JSR ObjectList_Insert
+	STA MATCH_BALLID
+	TAX
+	
+	PLA
+	STA LAUNCHER_PARENTID, x
+	
+	RTS
+	
+Match_Play:
 .updateTimer
+	LDA MATCH_FRAMES
 	TCK MATCH_FRAMES
 	LDA MATCH_FRAMES
 	CMP #50
 	BCC .asdf
 	DEC MATCH_TIMER
+	BEQ .timeup
 	JSR Match_UpdateTimer
 .asdf
-	
+	JMP .exit
+
+.timeup
+	INC MATCH_TIMER
 .exit
 	RTS
 	
@@ -220,21 +284,5 @@ Match_UpdateTimer
 	JSR PPU_DrawLargeBase100
 	
 	RTS
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	

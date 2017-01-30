@@ -160,3 +160,13 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 
 +Umbrella collision fixed for new vector system and also 100% functional.
 
+30/01
+
+-the deadline did not get extended... 
+
+****************new branch made for changes to a severely downgraded NESDev build made.***************
++Removed some code that is not going to be used
++Removed function to upload top of playfield, replaced with one that uploads WHOLE playfield
++Art updated
++Match game state now actually resembles a game state
++"Launcher" object attachment to the umbrella added, reads controller and transforms itself into a ball when B is pressed and released, shows aim reticle when B is being held

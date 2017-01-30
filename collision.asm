@@ -335,13 +335,13 @@ CollisionMap_Default:
 	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	
-	.db _Z, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _T, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	
-	.db _Z, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _S, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
 	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
@@ -387,7 +387,7 @@ CollisionMap_UploadMap:
 	TAY
 	
 	INX
-	CPX #$9F
+	CPX #$9E
 	BCS .end
 	
 	INY

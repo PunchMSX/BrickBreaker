@@ -18,12 +18,9 @@ Metasprite_Table:
 	.dw _MS_Intro_Umbrella_Ok
 	.dw _MS_Debug_Checkered_16x16
 	.dw _MS_Debug_Checkered_8x8
-	.dw _MS_LaunchArrows
-	.dw _MS_KnotArrow
+	.dw _MS_DottedLeft
+	.dw _MS_DottedRight
 	.dw _MS_Projectile_Shadow
-	.dw _MS_LaunchArrowLeft
-	.dw _MS_LaunchArrowCenter
-	.dw _MS_LaunchArrowRight
 	
 _MS_Projectile_Default:
 	.db 1 * 4
@@ -44,7 +41,7 @@ _MS_Chara_Up:
 	.db 0, $14, $02, 00
 _MS_Chara_Up_Blink:
 	.db 2 * 4
-	.db 0, $13, $02, -8
+	.db 0, $18, $02, -8
 	.db 0, $1a, $02, 00
 _MS_Chara_Down:
 	.db 2 * 4
@@ -83,29 +80,17 @@ _MS_Debug_Checkered_16x16:
 _MS_Debug_Checkered_8x8:
 	.db 4
 	.db 0, $0B, $0, 0
-_MS_LaunchArrows:
-	.db 4 * 3
-	.db -08, $20, $0, -16
-	.db -08, $20, $40, 08
-	.db -08, $21, $0, -03
-_MS_KnotArrow:
-	.db 4 * 4
-	.db 0, $22, $0, -16
-	.db 0, $23, $0, -8
-	.db 8, $24, $0, -16
-	.db 8, $25, $0, -8
+_MS_DottedLeft:
+	.db 4 * 2
+	.db -08, $20, $0, -08
+	.db -16, $21, $0, -16
+_MS_DottedRight:
+	.db 4 * 2
+	.db -08, $20, $40, 0
+	.db -16, $21, $0, 8
 _MS_Projectile_Shadow:
 	.db 1 * 4
 	.db -4, $0A, $02, -4	
-_MS_LaunchArrowLeft:
-	.db 4
-	.db -08, $20, $0, -16
-_MS_LaunchArrowCenter:
-	.db 4
-	.db -08, $21, $0, -03
-_MS_LaunchArrowRight:
-	.db 4 
-	.db -08, $20, $40, 08
 	
 ;***********************************
 ;*** A n i m a t i o n  D a t a  ***

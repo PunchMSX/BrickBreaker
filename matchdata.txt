@@ -38,9 +38,9 @@ Match_Char0Map:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B
 	
-	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E	
-	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+	.db _B, _B, _B, _B, _B, _G, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
-	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	

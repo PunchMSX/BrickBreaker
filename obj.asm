@@ -12,6 +12,10 @@ BALL_SELFDESTRUCT = OBJ_INTSTATE8
 PLAYER_UMBRELLAID = OBJ_INTSTATE5
 UMB_PARENTID = OBJ_INTSTATE1
 
+LAUNCHER_PARENTID = OBJ_INTSTATE1
+LAUNCHER_ARROWID = OBJ_INTSTATE2
+LAUNCHER_ANGLE = OBJ_INTSTATE3
+
 
 OBJ_DEBUG_CHECKERED = 0
 OBJ_DEBUG_CHECKERED_SMALL = 1
@@ -26,8 +30,9 @@ OBJ_STATIC = 6
 OBJ_PLAYER = 7
 OBJ_UMBRELLA = 8
 
-OBJ_ENEMY = 9
-OBJ_ENEMY_SHIELD = 10
+OBJ_BALL_LAUNCHER = 9
+
+
 
 ;Must load slot # into X first
 ;Address must be subtracted by 1 for indirect JSR
@@ -45,6 +50,8 @@ ObjectLogic_Table:
 	.dw _OBJ_Player - 1
 	.dw _OBJ_Umbrella - 1
 	
+	.dw _OBJ_Ball_Launcher - 1
+	
 ObjectInit_Table:
 	.dw _OBJ_Debug_Checkered_Init - 1
 	.dw _OBJ_Debug_Checkered_Small_Init - 1
@@ -59,12 +66,138 @@ ObjectInit_Table:
 	.dw _OBJ_Player_Init - 1
 	.dw _OBJ_Umbrella_Init - 1
 	
-	.dw _OBJ_Enemy_Init - 1
-	.dw _OBJ_Enemy_Shield_Init - 1
+	.dw _OBJ_Ball_Launcher_Init - 1
 	
-_OBJ_Enemy_Init:
-_OBJ_Enemy_Shield_Init:
+_OBJ_Ball_Launcher_Init:
+	BIT $6660
+	LDA #15
+	STA OBJ_METASPRITE, x
+		
+	LDA #0
+	STA LAUNCHER_ANGLE, x
 	
+	PHX
+	LDA #OBJ_STATIC
+	JSR ObjectList_Insert
+	STA <TEMP_BYTE
+	PLX
+	LDA <TEMP_BYTE
+	STA LAUNCHER_ARROWID, x
+	
+	CMP #$FF
+	BEQ .selfdestruct
+	RTS
+	
+.selfdestruct
+	PLX
+	JSR ObjectList_Remove
+	RTS
+
+_OBJ_Ball_Launcher:
+	LDA LAUNCHER_PARENTID, x
+	CMP #$FF
+	BNE .sync
+	JMP .selfdestruct
+.sync
+	TAY
+	LDA OBJ_XPOS, y
+	STA OBJ_XPOS, x
+
+	LDA OBJ_YPOS, y
+	SEC
+	SBC #$4
+	STA OBJ_YPOS, x
+	
+	LDA LAUNCHER_ARROWID, x
+	CMP #$FF
+	BNE .arrowsync
+	JMP .selfdestruct
+	
+.arrowsync
+	TAY
+	LDA OBJ_XPOS, x
+	STA OBJ_XPOS, y
+
+	LDA OBJ_YPOS, x
+	STA OBJ_YPOS, y
+	
+.releaseb
+	LDA CTRLPORT_1
+	AND #CTRL_B
+	BNE .holdb
+	LDA OLDCTRL_1
+	AND #CTRL_B
+	BEQ .hidearrow
+	
+	BIT $6665
+	
+	PHX
+	
+	LDA LAUNCHER_ARROWID, x
+	TAX
+	JSR ObjectList_Remove
+	
+	PLX
+	
+	LDA LAUNCHER_ANGLE, x
+	PHA
+	
+	LDA #OBJ_BALL
+	STA OBJ_LIST, x
+	
+	JSR _OBJ_Ball_Init
+	LDA #2
+	STA BALL_SPEED, x
+	PLA
+	BNE .rightangle
+.leftangle
+	LDA #ANGLE_225
+	STA BALL_ANGLE, x
+	RTS
+.rightangle
+	LDA #ANGLE_315
+	STA BALL_ANGLE, x
+	RTS
+;***************
+
+.holdb
+	LDA CTRLPORT_1
+	AND #CTRL_LEFT
+	BNE .rightAngle
+	LDA #0
+	STA LAUNCHER_ANGLE, x
+	
+.rightAngle
+	LDA CTRLPORT_1
+	AND #CTRL_RIGHT
+	BEQ .updateArrow
+	LDA #1
+	STA LAUNCHER_ANGLE, x
+	
+.updateArrow
+	LDA LAUNCHER_ARROWID, x
+	TAY
+	LDA #13
+	CLC
+	ADC LAUNCHER_ANGLE, x
+	STA OBJ_METASPRITE, y
+	
+.exit
+	RTS
+	
+.hidearrow
+	LDA LAUNCHER_ARROWID, x
+	TAY
+	LDA #15
+	STA OBJ_METASPRITE, y
+	RTS
+	
+.selfdestruct
+	JSR ObjectList_Remove
+	RTS
+	
+	
+;*************************************************************************
 _OBJ_Player_Init:
 	LDY #0
 	JSR ChangeAnimation
@@ -114,8 +247,10 @@ _OBJ_Player:
 	LDA CTRLPORT_1
 	AND #CTRL_LEFT
 	BEQ .checkCtrlRight
-	DEC OBJ_XPOS, x
 	LDA OBJ_XPOS, x
+	SEC
+	SBC #2
+	STA OBJ_XPOS, x
 	CMP #16
 	BCS .checkABButton
 	LDA #16
@@ -126,11 +261,13 @@ _OBJ_Player:
 	LDA CTRLPORT_1
 	AND #CTRL_RIGHT
 	BEQ .checkABButton
-	INC OBJ_XPOS, x
 	LDA OBJ_XPOS, x
-	CMP #16
-	BCS .checkABButton
-	LDA #256-16
+	CLC
+	ADC #2
+	STA OBJ_XPOS, x
+	CMP #256-24
+	BCC .checkABButton
+	LDA #256-24
 	STA OBJ_XPOS, x
 	
 .checkABButton
@@ -307,8 +444,8 @@ _OBJ_Static:
 _OBJ_Ball_Init:
 	LDA #0
 	STA OBJ_METASPRITE, x
-	LDA #FALSE
-	STA BALL_SOLID, x
+	LDA #TRUE
+	STA BALL_SOLID, x ;Ball always solid for NESDev compo mini game.
 	
 .genAngle
 	JSR RNG_Next
@@ -324,16 +461,6 @@ _OBJ_Ball_Init:
 	BCS .genSpeed
 	STA BALL_SPEED, x
 	JMP .end
-	
-	
-;This is skipped for now ************************************88
-.gen
-	JSR RNG_Next
-	AND #%00000001
-	BEQ .end
-	LDA BALL_SPEED, x
-	NEG
-	STA BALL_SPEED, x
 
 .end
 	RTS
@@ -632,7 +759,6 @@ _OBJ_Ball:
 	STA OVERLAP_OFFSET
 	
 .udcheck
-		BIT $6667
 		JSR Ball_MoveY
 		
 		;Checks the top/bottom right points for collisions
@@ -801,14 +927,8 @@ Ball_CollisionX:
 	
 	LDA #TRUE
 	STA BALL_SELFDESTRUCT
-	LDA OBJ_YPOS, x
-	CMP #$80
-	BCS .p1targethit
-.p2targethit
-	INC MATCH_P1SCOREBUF
-	RTS
-.p1targethit
-	INC MATCH_P2SCOREBUF
+
+	INC MATCH_P1LIFEBUF
 	RTS
 	
 .placeholder ;next tile type to be created.
@@ -884,15 +1004,10 @@ Ball_CollisionY:
 	
 	LDA #TRUE
 	STA BALL_SELFDESTRUCT
-	LDA OBJ_YPOS, x
-	CMP #$80
-	BCS .p1targethit
-.p2targethit
-	INC MATCH_P1SCOREBUF
+	
+	INC MATCH_P1LIFEBUF
 	RTS
-.p1targethit
-	INC MATCH_P2SCOREBUF
-	RTS
+
 	
 .placeholder ;next tile type to be created.
 	RTS
@@ -1256,7 +1371,7 @@ ObjectList_Insert:
 	STA OBJ_INTSTATE4, x
 	STA OBJ_INTSTATE5, x
 	STA OBJ_INTSTATE6, x
-	STA OBJ_INTSTATE7, x
+	;STA OBJ_INTSTATE7, x
 	STA OBJ_INTSTATE8, x
 	TXA
 	RTS ;End!

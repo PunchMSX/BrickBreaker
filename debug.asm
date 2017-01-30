@@ -178,8 +178,6 @@ Debug_MapEdit:
 	AND #CTRL_B
 	BNE .buttonA
 	
-	BIT $6666
-	
 	LDA #TILE_BRICK
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX

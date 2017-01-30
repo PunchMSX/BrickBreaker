@@ -146,16 +146,14 @@ GAME_TRANSITION	.ds 1
 MATCH_LEVEL		.ds 1 ;Current match # (level id), 0 for first run.
 MATCH_TIMER		.ds 1 ;Base 100 number representing the time left.
 MATCH_FRAMES	.ds 1 ;frame timer, increase main timer when full.
-MATCH_P1SCORE	.ds 1
-MATCH_P2SCORE	.ds 1 ;The score (base 100) of each player on the field.
+MATCH_P1SCORE	.ds 2
+MATCH_P1LIFE	.ds 1
 MATCH_TIMER_DEFAULT = 99
-
-MATCH_P1BALLS	.ds 1 ;Number of balls player/enemy has to be launched.
-MATCH_P2BALLS	.ds 1
-MATCH_BALL_MAX = 3
+MATCH_LIVES_DEFAULT = 5
+MATCH_BALLID	.ds 1
 
 MATCH_P1SCOREBUF .ds 1
-MATCH_P2SCOREBUF .ds 1 ;A buffer which balls increment when they hit the goal.
+MATCH_P1LIFEBUF	.ds 1
 
 MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writes before the match starts.
 
@@ -553,16 +551,6 @@ NMI:
 Main_Palette:
 	.incbin "art/bg.pal"
 	.incbin "art/sprite.pal"
-	
-Text_ProgBy:
-	.db 1
-	.db "PROGRAMMED BY ALEFF CORREA"
-	.db 1, 0
-	
-Text_PushRun:
-	.db 1
-	.db "PRESS START BUTTON"
-	.db 1, 0
 	
 bg_Title_Screen:
 	.incbin "art/title.rle"
