@@ -7,12 +7,7 @@ STATE_GAME = 3
 STATE_PUZZLEGAME = 4
 STATE_GAMEOVER = 5
 STATE_ENDING_WIN = 6
-STATE_ENDING_LOSE = 7
-STATE_FALSEENDING = 8
-STATE_CREDITS = 9
-STATE_DEBUG_MAP = 10
-STATE_DEBUG_COLLISION = 11
-STATE_ERROR = 12
+STATE_ERROR = 7
 	
 GameState_Change:
 	LDX GAME_STATE
@@ -30,12 +25,7 @@ GameState_Table:
 	.dw 0 ;puzzlegame
 	.dw 0 ;gameover
 	.dw 0 ;ending_win
-	.dw 0 ;ending_lose
-	.dw 0 ;falseendnig
-	.dw 0 ;credits
 	.dw Debug_MapEdit - 1 ;debug.asm
-	.dw 0 ;debug collision
-	.dw 0 ;error handler	
 	
 GameStateInit_Table:
 	.dw State_Instructions_Init - 1 ;instrutions.asm
@@ -45,12 +35,7 @@ GameStateInit_Table:
 	.dw 0 ;puzzlegame
 	.dw 0 ;gameover
 	.dw 0 ;ending_win
-	.dw 0 ;ending_lose
-	.dw 0 ;falseendnig
-	.dw 0 ;credits
 	.dw Debug_MapEdit_Init - 1 ;debug.asm
-	.dw 0 ;debug collision
-	.dw 0 ;error handler
 	
 GameStateManager:
 	LDA GAME_STATE

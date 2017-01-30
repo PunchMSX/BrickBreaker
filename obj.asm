@@ -173,7 +173,7 @@ Umbrella_Collision:
 	BEQ .found
 	JMP .loop
 .found
-	JSR Overlap_Test_1Box ;asfdasfaf
+	JSR Overlap_Test_1Box
 	CMP #OVERLAP_FALSE
 	BEQ .loop
 	
