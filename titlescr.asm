@@ -16,12 +16,6 @@ Intro_StateMachine:
 	
 	.db OPC_Delay, 100
 	
-	.db OPC_DrawRLE
-	.dw $2043, Text_ProgBy
-	
-	.db OPC_DrawRLE
-	.dw $236C, Text_PushRun
-	
 	.db OPC_Delay, 250
 	.db OPC_Delay, 200
 	

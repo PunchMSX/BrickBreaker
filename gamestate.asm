@@ -7,7 +7,8 @@ STATE_GAME = 3
 STATE_PUZZLEGAME = 4
 STATE_GAMEOVER = 5
 STATE_ENDING_WIN = 6
-STATE_ERROR = 7
+STATE_DEBUG = 7
+STATE_ERROR = 8
 	
 GameState_Change:
 	LDX GAME_STATE
@@ -80,21 +81,6 @@ Match0_StateMachine:
 	.dw $2000, bg_Playfield
 	
 	.db OPC_Delay, 60
-	
-	.db OPC_DrawString
-	.dw $20EE, Match_Text_Name
-	
-	.db OPC_DrawString
-	.dw $20F4, Match_Char0Name
-	
-	.db OPC_DrawString
-	.dw $2143, Match_Char0Bio
-	
-	.db OPC_DrawString
-	.dw $210C, Match_Char0Record
-	
-	.db OPC_Delay, 250
-	.db OPC_Delay, 150
 	
 	.db OPC_DrawMetatileRow
 	.dw $20C2, COLLISION_MAP + 49
