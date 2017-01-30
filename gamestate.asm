@@ -155,7 +155,7 @@ State_Match_Init:
 	;Gets the current enemy's field arrangement and uploads into collision map.
 	LDA MATCH_LEVEL
 	TZP16 CALL_ARGS, Match_EnemyMaps
-	JSR CollisionMap_UploadTop
+	JSR CollisionMap_UploadMap
 	
 	;Resets score
 	LDA #0

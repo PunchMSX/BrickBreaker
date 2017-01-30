@@ -1,32 +1,10 @@
 ;matchdata.txt
 
-Match_Text_Name:
-	.db "NAME: "
-	.db 0
-	
-Text_GoodLuck:
-	.db "GOOD LUCK!"
-	.db 0
-	
 Text_Start:
 	.db "START!"
 	.db 0
-	
-Match_Char0Name:
-	.db "GREEN GUY"
-	.db 0
-Match_Char0Record:
-	.db "55 LOSSES, 0 WINS"
-	.db 0
-Match_Char0Country:
-	.db "UNKNOWN"
-	.db 0
-Match_Char0Bio: ;24 x 3 chars long
-   ;.db "THIS HAS SIZE 24 CHARS !"
-	.db "A PERPETUAL AMATEUR WHO&"
-	.db "ENTERS EVERY YEAR AND &"
-	.db "LOSES EVERY TIME.&"
-	.db "  GO EASY ON HIM."
+Text_GoodLuck:
+	.db "GOOD LUCK!"
 	.db 0
 	
 Match_Instructions1
@@ -42,22 +20,10 @@ Match_Instructions4
 	.db "RELEASE TO FIRE!"
 	.db 0
 Match_Instructions5
-	.db "YOU CAN ONLY HAVE SO MANY&"
-	.db "ON SCREEN AT ONCE."
+	.db "DESTROY ALL BRICKS ON&"
+	.db "SCREEN TO BEAT LEVEL."
 	.db 0
 	
-Match_Instructions6
-	.db "'A' SELECTS SPECIAL BALLS&"
-	.db "IF YOU HAVE ANY!"
-	.db 0
-	
-Match_Instructions7
-	.db "  YOUR BALL WILL GO THROUGH  &"
-	.db " OBSTACLES UNTIL IT CROSSES  &"
-	.db "THE DOTTED LINE IN THE MIDDLE&"
-	.db "OF THE PLAYFIELD."
-	.db 0
-
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.
@@ -66,8 +32,15 @@ Match_EnemyMaps:
 	
 	;11x4
 Match_Char0Map:
+	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
-	.db _B, _E, _B, _E, _B, _E, _G, _E, _P, _E, _M, _E, _B, _E
+	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B
+	
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E	
+	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	

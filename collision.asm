@@ -371,9 +371,7 @@ CollisionMap_DefaultBorder:
 	
 	RTS
 	
-;Uploads the top half of the playfield collision map.
-;Call_Args (2bytes) = collision data address
-CollisionMap_UploadTop:	
+CollisionMap_UploadMap:	
 	LDY #0
 	LDX #0
 .loop
@@ -383,13 +381,13 @@ CollisionMap_UploadTop:
 	LDA [CALL_ARGS], y
 	TAY
 	ORA Metatile_Durability, y
-	STA COLLISION_MAP + 48 + 1, x
+	STA COLLISION_MAP + 32 + 1, x
 	
 	PLA
 	TAY
 	
 	INX
-	CPX #$3E
+	CPX #$9F
 	BCS .end
 	
 	INY
