@@ -56,6 +56,8 @@ GameStateManager:
 	LDA #FALSE
 	STA GAME_TRANSITION
 
+	JSR FamiToneMusicStop
+	
 .continue
 	LDA GAME_STATE
 	JSI GameState_Table
@@ -359,7 +361,7 @@ Match_Play:
 	LDA MATCH_FRAMES
 	TCK MATCH_FRAMES
 	LDA MATCH_FRAMES
-	CMP #5
+	CMP #75
 	BCC .asdf
 	DEC MATCH_TIMER
 	BEQ .timeup
@@ -523,7 +525,6 @@ Match_GetTileQ:
 	JMP .loop
 .end
 	LDA #FALSE
-	BIT $6666
 	RTS
 .found
 	INC MATCH_BRICKTOTAL

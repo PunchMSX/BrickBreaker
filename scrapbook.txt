@@ -189,3 +189,4 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 +Match now has a counter with number of bricks destroyed and calculates how many bricks are in total in a level when starting up.
 +Time up state added, returns to match if number of balls-1 is not zero, else transitions to gameover state. Match also draws number of balls.
 +Gameover state placeholder added, for now it only goes to titlescreen, but it should ask if the player wants to continue depending of the # of lives.
++Player now can boost movement speed by holding B. Button A is how you launch balls. Instruction text changed to reflect these changes.

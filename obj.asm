@@ -122,10 +122,10 @@ _OBJ_Ball_Launcher:
 	
 .releaseb
 	LDA CTRLPORT_1
-	AND #CTRL_B
-	BNE .holdb
+	AND #CTRL_A
+	BNE .holdA
 	LDA OLDCTRL_1
-	AND #CTRL_B
+	AND #CTRL_A
 	BEQ .hidearrow
 	
 	PHX
@@ -157,10 +157,10 @@ _OBJ_Ball_Launcher:
 	RTS
 ;***************
 
-.holdb
+.holdA
 	LDA CTRLPORT_1
 	AND #CTRL_LEFT
-	BNE .rightAngle
+	BEQ .rightAngle
 	LDA #0
 	STA LAUNCHER_ANGLE, x
 	
@@ -250,38 +250,54 @@ _OBJ_Player:
 	LDA CTRLPORT_1
 	AND #CTRL_LEFT
 	BEQ .checkCtrlRight
+	LDA CTRLPORT_1
+	AND #CTRL_B
+	BNE .boostLeft
 	LDA OBJ_XPOS, x
 	SEC
 	SBC #2
 	STA OBJ_XPOS, x
 	CMP #16
-	BCS .checkABButton
+	BCS .endCtrlCheck
 	LDA #16
 	STA OBJ_XPOS, x
-	JMP .checkABButton
+	JMP .endCtrlCheck
+	
+.boostLeft
+	LDA OBJ_XPOS, x
+	SEC
+	SBC #4
+	STA OBJ_XPOS, x
+	CMP #16
+	BCS .endCtrlCheck
+	LDA #16
+	STA OBJ_XPOS, x
+	JMP .endCtrlCheck
 	
 .checkCtrlRight
 	LDA CTRLPORT_1
 	AND #CTRL_RIGHT
-	BEQ .checkABButton
+	BEQ .endCtrlCheck
+	LDA CTRLPORT_1
+	AND #CTRL_B
+	BNE .boostRight
 	LDA OBJ_XPOS, x
 	CLC
 	ADC #2
 	STA OBJ_XPOS, x
 	CMP #256-24
-	BCC .checkABButton
+	BCC .endCtrlCheck
 	LDA #256-24
 	STA OBJ_XPOS, x
 	
-.checkABButton
-	LDA CTRLPORT_1
-	AND #CTRL_B
-	BEQ .endCtrlCheck
-	DEC OBJ_XPOS, x
+.boostRight:
 	LDA OBJ_XPOS, x
-	CMP #16
-	BCS .endCtrlCheck
-	LDA #16
+	CLC
+	ADC #4
+	STA OBJ_XPOS, x
+	CMP #256-24
+	BCC .endCtrlCheck
+	LDA #256-24
 	STA OBJ_XPOS, x
 	
 .endCtrlCheck
@@ -841,11 +857,12 @@ DamageTile:
 	LDA COLLISION_MAP, y
 	AND #%00011111
 	CMP #TILE_RUBBLE
-	BEQ .schedule
+	BNE .schedule
 	INC MATCH_P1SCOREBUF
 	INC MATCH_BROKENBRIX
 	
 .schedule ;Send it to the queue to be drawn next vBlank.
+	LDA COLLISION_MAP, y
 	AND #%00011111
 	STA <CALL_ARGS ;Metatile ID
 	

@@ -28,7 +28,6 @@ Gameover_StateMachine:
 
 	
 State_Timeup_Init:
-	BIT $6666
 	LDA #FALSE
 	STA TIMEUP_GO
 	
@@ -39,7 +38,6 @@ State_Timeup_Init:
 	
 State_Timeup:
 	JSR State_Interpreter
-	BIT $6667
 	LDA TIMEUP_GO
 	CMP #TRUE
 	BEQ .transition
@@ -60,10 +58,9 @@ State_Timeup:
 	LDA #STATE_GAMEOVER
 	JSR GameState_Change
 	RTS
-	
+
 	
 State_Gameover_Init:
-	BIT $6668
 	LDA #FALSE
 	STA TIMEUP_GO
 	
@@ -74,7 +71,6 @@ State_Gameover_Init:
 	
 State_Gameover:
 	JSR State_Interpreter
-	BIT $6669
 	LDA TIMEUP_GO
 	CMP #TRUE
 	BEQ .transition

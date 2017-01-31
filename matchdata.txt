@@ -20,7 +20,7 @@ Match_Instructions1
 	.db "INSTRUCTIONS"
 	.db 0
 Match_Instructions2
-	.db "HOLD 'B' TO AIM"
+	.db "HOLD 'A' TO AIM"
 	.db 0
 Match_Instructions3
 	.db "D-PAD CHANGES DIRECTION"
@@ -29,8 +29,8 @@ Match_Instructions4
 	.db "RELEASE TO FIRE!"
 	.db 0
 Match_Instructions5
-	.db "DESTROY ALL BRICKS ON&"
-	.db "SCREEN TO BEAT LEVEL."
+	.db "'B' MAKES YOU GO FASTER.&"
+	.db "DESTROY ALL BRICK TILES!"
 	.db 0
 	
 ;*****************************************************

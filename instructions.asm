@@ -42,7 +42,7 @@ Instruction0_StateMachine:
 	
 	.db OPC_Delay, 150
 	
-	.db OPC_DrawSquare, $20, 28, 1
+	.db OPC_DrawSquare, $20, 28, 2
 	.dw $22A2
 	
 	.db OPC_DrawString
@@ -69,7 +69,7 @@ Instruction0_StateMachine:
 	.dw $22C5, Match_Instructions5
 	
 
-	.db OPC_Delay, 175
+	.db OPC_Delay, 225
 	
 	.db OPC_DrawSquare, $20, 28, 2
 	.dw $22C2
