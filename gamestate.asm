@@ -230,11 +230,12 @@ State_Match:
 Match_Play_Init:
 	LDA #TRUE
 	STA MATCH_START
-	
+		BIT $6669	
 	LDX #$78
 	LDY #$C2
 	LDA #OBJ_PLAYER
 	JSR ObjectList_Insert
+	STA MATCH_PLAYERID
 	
 	PHA
 	
@@ -252,6 +253,8 @@ Match_Play_Init:
 	RTS
 	
 Match_Play:
+	JSR Match_MonitorBall
+	
 .updateTimer
 	LDA MATCH_FRAMES
 	TCK MATCH_FRAMES
@@ -288,4 +291,27 @@ Match_UpdateTimer
 	
 	RTS
 	
+Match_MonitorBall:
+	LDY MATCH_BALLID
+	LDA OBJ_LIST, y
+	CMP #$FF
+	BEQ .replace
+	RTS
+
+.replace
+		BIT $6669
+	LDY MATCH_PLAYERID
+	LDA PLAYER_UMBRELLAID, y
+	TAY
+	
+	LDA OBJ_XPOS, y
+	TAX
+	LDA OBJ_YPOS, y
+	SEC
+	SBC #6
+	TAY
+	LDA #OBJ_BALL_LAUNCHER
+	JSR ObjectList_Insert
+	STA MATCH_BALLID
+	RTS
 	

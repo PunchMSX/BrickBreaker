@@ -69,7 +69,6 @@ ObjectInit_Table:
 	.dw _OBJ_Ball_Launcher_Init - 1
 	
 _OBJ_Ball_Launcher_Init:
-	BIT $6660
 	LDA #15
 	STA OBJ_METASPRITE, x
 		
@@ -128,8 +127,6 @@ _OBJ_Ball_Launcher:
 	LDA OLDCTRL_1
 	AND #CTRL_B
 	BEQ .hidearrow
-	
-	BIT $6665
 	
 	PHX
 	
@@ -222,8 +219,14 @@ _OBJ_Player_Init:
 	CMP #$FF
 	BEQ .fail
 	
-	STA PLAYER_UMBRELLAID, x
+	STA <TEMP_BYTE ;Umbreall id?
 	PLA
+	STA <TEMP_BYTE + 1;Player id?
+	TAX
+	LDA <TEMP_BYTE
+	STA PLAYER_UMBRELLAID, x
+	TAX
+	LDA <TEMP_BYTE + 1
 	STA UMB_PARENTID, x
 	
 	RTS
@@ -412,7 +415,8 @@ Umbrella_Collision:
 	
 _OBJ_Umbrella:
 	LDY UMB_PARENTID, x
-	CPY #$FF
+	LDA OBJ_LIST, y
+	CMP #$FF
 	BNE .sync
 	JSR ObjectList_Remove
 	RTS

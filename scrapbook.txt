@@ -170,3 +170,8 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 +Art updated
 +Match game state now actually resembles a game state
 +"Launcher" object attachment to the umbrella added, reads controller and transforms itself into a ball when B is pressed and released, shows aim reticle when B is being held
++Music added
+
+-Launcher attaches to player head and not umbrella, ObjectList_Insert returns umbrella id instead of player id when inserting
+
+1 day left
