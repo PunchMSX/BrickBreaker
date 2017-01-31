@@ -161,9 +161,9 @@ MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writ
 ANGLE_SPEEDX	.ds 2
 ANGLE_SPEEDY	.ds 2 ;used in obj.asm for angled ball movement
 
-MATCH_P1SCORE_PPU = $204A
-MATCH_P2SCORE_PPU = $2054
-MATCH_TIMER_PPU   = $204F
+MATCH_SCORE_PPU = $2064
+MATCH_LEVEL_PPU = $205B
+MATCH_TIMER_PPU = $204F
 
 
 INTRO_BULLETQ 	.ds 1
@@ -248,8 +248,8 @@ COLMAP_EDITABLE_Y2 = 13
  .org $A000
  
 	.include "lib/famitone2.asm"
-	.include "audio/Sketchy/Venus.asm"
-	
+	.include "audio/headinthesand.asm"
+	.include "audio/sfx.asm"
 RNG_Next:
 	LDA <RNG_SEED
 	BEQ .zero
@@ -461,8 +461,8 @@ RESET:
 	STA GAME_TRANSITION
 	
 	LDA #1
-	LDX #LOW(Venus_music_data)
-	LDY #HIGH(Venus_music_data)
+	LDX #LOW(headinthesand_music_data)
+	LDY #HIGH(headinthesand_music_data)
 	JSR FamiToneInit
 	
 ;*********************************************
@@ -537,9 +537,8 @@ NMI:
  .data
  .bank 2
  .org $C000
- ;DPCM samples goes here, aligned by 64 bytes.
+
  
- .incbin "audio/sketchy/Boss.dmc"
  .code
  .bank 3
  .org $E000

@@ -12,9 +12,9 @@ BALL_SELFDESTRUCT = OBJ_INTSTATE8
 PLAYER_UMBRELLAID = OBJ_INTSTATE5
 UMB_PARENTID = OBJ_INTSTATE1
 
-LAUNCHER_PARENTID = OBJ_INTSTATE1
-LAUNCHER_ARROWID = OBJ_INTSTATE2
-LAUNCHER_ANGLE = OBJ_INTSTATE3
+LAUNCHER_PARENTID = OBJ_INTSTATE3
+LAUNCHER_ARROWID = OBJ_INTSTATE4
+LAUNCHER_ANGLE = OBJ_INTSTATE5
 
 
 OBJ_DEBUG_CHECKERED = 0
@@ -198,7 +198,6 @@ _OBJ_Ball_Launcher:
 _OBJ_Player_Init:
 	LDY #0
 	JSR ChangeAnimation
-	
 .spawnUmbrella
 	PHX
 
@@ -219,9 +218,9 @@ _OBJ_Player_Init:
 	CMP #$FF
 	BEQ .fail
 	
-	STA <TEMP_BYTE ;Umbreall id?
+	STA <TEMP_BYTE ;Umbreall id
 	PLA
-	STA <TEMP_BYTE + 1;Player id?
+	STA <TEMP_BYTE + 1;Player id
 	TAX
 	LDA <TEMP_BYTE
 	STA PLAYER_UMBRELLAID, x
@@ -229,6 +228,7 @@ _OBJ_Player_Init:
 	LDA <TEMP_BYTE + 1
 	STA UMB_PARENTID, x
 	
+	TAX ;We must return from the init routine with the X intact.
 	RTS
 	
 .fail
@@ -1363,7 +1363,7 @@ ObjectList_Insert:
 	STA OBJ_LIST, x ;Object ID
 	
 	;A is loaded with the object's type (ID)
-	JSI ObjectInit_Table ;We're trusting in the init routine to preserve X here.
+	JSI ObjectInit_Table ;We're trusting the init routine to preserve X here.
 	
 .resetVars
 	LDA #0
@@ -1371,12 +1371,12 @@ ObjectList_Insert:
 	STA OBJ_ANIMFRAME, x ;Sets current animation frame to 0.
 	;STA OBJ_INTSTATE1, x
 	;STA OBJ_INTSTATE2, x
-	STA OBJ_INTSTATE3, x
-	STA OBJ_INTSTATE4, x
-	STA OBJ_INTSTATE5, x
-	STA OBJ_INTSTATE6, x
+	;STA OBJ_INTSTATE3, x
+	;STA OBJ_INTSTATE4, x
+	;STA OBJ_INTSTATE5, x
+	;STA OBJ_INTSTATE6, x
 	;STA OBJ_INTSTATE7, x
-	STA OBJ_INTSTATE8, x
+	;STA OBJ_INTSTATE8, x
 	TXA
 	RTS ;End!
 	

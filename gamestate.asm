@@ -230,7 +230,6 @@ State_Match:
 Match_Play_Init:
 	LDA #TRUE
 	STA MATCH_START
-		BIT $6669	
 	LDX #$78
 	LDY #$C2
 	LDA #OBJ_PLAYER
@@ -245,7 +244,25 @@ Match_Play_Init:
 	TAX
 	
 	PLA
+	TAY
+	LDA PLAYER_UMBRELLAID, y
 	STA LAUNCHER_PARENTID, x
+	
+	;Draw level # on screen
+	LDA #LOW(MATCH_LEVEL)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_LEVEL)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_LEVEL_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_LEVEL_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+	
+	;Draw timer on screen, too.
+	JSR Match_UpdateTimer
 	
 	LDA #0
 	JSR FamiToneMusicPlay
@@ -272,6 +289,8 @@ Match_Play:
 .exit
 	RTS
 	
+	
+Match_UpdateScore:
 	
 Match_UpdateTimer
 	LDA #0
@@ -302,16 +321,42 @@ Match_MonitorBall:
 		BIT $6669
 	LDY MATCH_PLAYERID
 	LDA PLAYER_UMBRELLAID, y
+	PHA
 	TAY
 	
 	LDA OBJ_XPOS, y
 	TAX
 	LDA OBJ_YPOS, y
-	SEC
-	SBC #6
 	TAY
 	LDA #OBJ_BALL_LAUNCHER
 	JSR ObjectList_Insert
 	STA MATCH_BALLID
+	TAX
+	PLA
+	STA LAUNCHER_PARENTID, x
+	RTS
+	
+Match_ScanForTiles:
+	LDX #0
+	LDY #0
+.loop
+	LDA COLLISION_MAP, x
+	AND #%00011111
+	BEQ .continue
+	CMP #TILE_BRICK
+	BEQ .found
+	CMP #TILE_DAMAGEDBRICK
+	BEQ .found
+
+.continue
+	INX
+	CPX #240
+	BCS .notfound
+	JMP .loop
+.notfound
+	LDA #FALSE
+	RTS
+.found
+	LDA #TRUE
 	RTS
 	

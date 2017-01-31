@@ -175,3 +175,9 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 -Launcher attaches to player head and not umbrella, ObjectList_Insert returns umbrella id instead of player id when inserting
 
 1 day left
+
+31/01
+
++Launcher positioning bug fix... it turns out that I forgot to preserve X upon exit from the player init subroutine, and that's expected from all init routines. Some changes were also made in the launcher subroutine and the match gamestate too.
+
++Match now draws level # on screen.
