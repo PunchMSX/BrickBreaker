@@ -181,3 +181,11 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 +Launcher positioning bug fix... it turns out that I forgot to preserve X upon exit from the player init subroutine, and that's expected from all init routines. Some changes were also made in the launcher subroutine and the match gamestate too.
 
 +Match now draws level # on screen.
+
++Definitive music change made to a tune that actually fits in the game. Sound effects created.
+
++Match now keeps score, draws score when updated. Ball object increases buffer for score when a brick object is destroyed.
++Match keeps track of number of balls and lives. Ball object decreases ball counter when destroyed.
++Match now has a counter with number of bricks destroyed and calculates how many bricks are in total in a level when starting up.
++Time up state added, returns to match if number of balls-1 is not zero, else transitions to gameover state. Match also draws number of balls.
++Gameover state placeholder added, for now it only goes to titlescreen, but it should ask if the player wants to continue depending of the # of lives.

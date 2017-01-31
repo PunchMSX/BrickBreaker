@@ -797,6 +797,7 @@ _OBJ_Ball:
 	CMP #TRUE
 	BNE .exit
 	JSR ObjectList_Remove
+	INC MATCH_P1BALLBUF
 .exit
 	RTS
 	
@@ -835,6 +836,14 @@ DamageTile:
 	ORA Metatile_Durability, y ;Apply default durability to our new "damaged" metatile.
 	LDY <TEMP_BYTE
 	STA COLLISION_MAP, y
+	
+.increasegoalcounter
+	LDA COLLISION_MAP, y
+	AND #%00011111
+	CMP #TILE_RUBBLE
+	BEQ .schedule
+	INC MATCH_P1SCOREBUF
+	INC MATCH_BROKENBRIX
 	
 .schedule ;Send it to the queue to be drawn next vBlank.
 	AND #%00011111
@@ -932,7 +941,6 @@ Ball_CollisionX:
 	LDA #TRUE
 	STA BALL_SELFDESTRUCT
 
-	INC MATCH_P1LIFEBUF
 	RTS
 	
 .placeholder ;next tile type to be created.
@@ -1009,7 +1017,6 @@ Ball_CollisionY:
 	LDA #TRUE
 	STA BALL_SELFDESTRUCT
 	
-	INC MATCH_P1LIFEBUF
 	RTS
 
 	

@@ -1,10 +1,19 @@
 ;matchdata.txt
 
+Zeroes:
+	.db 0, 0, 0, 0
+
+Text_Timeup:
+	.db "TIME UP!"
+	.db 0
 Text_Start:
 	.db "START!"
 	.db 0
 Text_GoodLuck:
 	.db "GOOD LUCK!"
+	.db 0
+Text_Gameover:
+	.db "GAME OVER :("
 	.db 0
 	
 Match_Instructions1

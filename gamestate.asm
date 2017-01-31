@@ -23,8 +23,8 @@ GameState_Table:
 	.dw Title_Loop - 1 ;titlescr.asm
 	.dw State_HighScore - 1 ;titlescr.asm
 	.dw State_Match - 1
-	.dw 0 ;timeup
-	.dw 0 ;gameover
+	.dw State_Timeup - 1
+	.dw State_Gameover - 1 ;gameover
 	.dw 0 ;ending_win
 	.dw Debug_MapEdit - 1 ;debug.asm
 	
@@ -33,8 +33,8 @@ GameStateInit_Table:
 	.dw Title_Init - 1 ;titlescr.asm
 	.dw State_HiScore_Init - 1 ;titlescr.asm
 	.dw State_Match_Init - 1
-	.dw 0 ;timeup
-	.dw 0 ;gameover
+	.dw State_Timeup_Init - 1
+	.dw State_Gameover_Init - 1 ;gameover
 	.dw 0 ;ending_win
 	.dw Debug_MapEdit_Init - 1 ;debug.asm
 	
@@ -174,20 +174,35 @@ Match0_StateMachine:
 	
 State_Match_Init:
 	LDA MATCH_LEVEL
-	BEQ .exit		;if level = 0, will play instruction screen then come back with level = 1
+	BEQ .firstrun		;if level = 0, will play instruction screen then come back with level = 1
 
 	LDX #LOW(Match0_StateMachine)
 	LDY #HIGH(Match0_StateMachine)
 	JSR State_Interpreter_Init
 	
 	;Gets the current enemy's field arrangement and uploads into collision map.
+	LDA MATCH_REENTRANT
+	CMP #TRUE
+	BEQ .cleartimers ;Preserve collision map if reentrant.
+	
 	LDA MATCH_LEVEL
 	TZP16 CALL_ARGS, Match_EnemyMaps
 	JSR CollisionMap_UploadMap
 	
+	LDA #FALSE
+	STA MATCH_REENTRANT
+	
+.cleartimers
 	LDA #0
 	;Resets Frame Timer
 	STA MATCH_FRAMES
+	STA MATCH_P1SCOREBUF
+	STA MATCH_P1BALLBUF
+	STA MATCH_BROKENBRIX
+	
+	;Calculate # of tiles to be broken to win
+	JSR Match_GetTileQ
+	
 	LDA #MATCH_TIMER_DEFAULT
 	STA MATCH_TIMER
 	
@@ -196,7 +211,18 @@ State_Match_Init:
 	
 	LDA #FALSE
 	STA MATCH_START
-.exit
+	RTS
+	
+.firstrun
+	LDA #MATCH_LIVES_DEFAULT
+	STA MATCH_P1LIFE
+	LDA #MATCH_BALLS_DEFAULT
+	STA MATCH_P1BALL
+	LDA #0
+	STA MATCH_P1SCORE
+	STA MATCH_P1SCORE + 1
+	LDA #FALSE
+	STA MATCH_REENTRANT
 	RTS
 	
 State_Match:
@@ -219,8 +245,9 @@ State_Match:
 	CMP #FALSE
 	BEQ .exit
 	CMP #TRUE
-	BEQ Match_Play
-	
+	BNE .2ndinit
+	JMP Match_Play
+.2ndinit	
 	CMP #2
 	BEQ Match_Play_Init
 	
@@ -261,8 +288,59 @@ Match_Play_Init:
 	
 	JSR PPU_DrawLargeBase100
 	
+	;Draw fake score zeroes on screen
+	LDA #LOW(Zeroes)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(Zeroes)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_SCORE_PPU + 4)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_SCORE_PPU + 4)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+	
 	;Draw timer on screen, too.
 	JSR Match_UpdateTimer
+	
+	;Draw "true" score digits too
+	LDA #LOW(MATCH_P1SCORE + 1)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1SCORE + 1)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_SCORE_PPU + 2)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_SCORE_PPU + 2)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+
+	LDA #LOW(MATCH_P1SCORE)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1SCORE)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_SCORE_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_SCORE_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100	
+	
+	;Draw them balls
+	LDA #LOW(MATCH_P1BALL)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1BALL)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_BALL_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_BALL_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100	
 	
 	LDA #0
 	JSR FamiToneMusicPlay
@@ -271,12 +349,17 @@ Match_Play_Init:
 	
 Match_Play:
 	JSR Match_MonitorBall
+	JSR Match_UpdateScore
+	JSR Match_UpdateBalls
+	
+	LDA MATCH_P1BALL
+	BEQ .gameover
 	
 .updateTimer
 	LDA MATCH_FRAMES
 	TCK MATCH_FRAMES
 	LDA MATCH_FRAMES
-	CMP #50
+	CMP #5
 	BCC .asdf
 	DEC MATCH_TIMER
 	BEQ .timeup
@@ -284,13 +367,98 @@ Match_Play:
 .asdf
 	JMP .exit
 
+.gameover
+	LDA #FALSE
+	STA MATCH_REENTRANT
+	LDA #STATE_GAMEOVER
+	JSR GameState_Change
+	RTS
 .timeup
-	INC MATCH_TIMER
+	LDA #STATE_TIMEUP
+	JSR GameState_Change
+	RTS
 .exit
 	RTS
 	
+Match_UpdateBalls
+	LDA MATCH_P1BALLBUF
+	BEQ .exit ;Exit if there's no points to be added
+	
+	LDA MATCH_P1BALL
+	SEC
+	SBC MATCH_P1BALLBUF
+	STA MATCH_P1BALL ;increase lower digits
+	BEQ .gameovera
+	BCC .gameovera
+	
+.draw
+	;Draw lower digits
+	LDA #LOW(MATCH_P1BALL)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1BALL)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_BALL_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_BALL_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+	
+.exit
+	LDA #0
+	STA MATCH_P1BALLBUF
+	RTS
+	
+.gameovera
+	LDA #0
+	STA MATCH_P1BALL
+	JMP .draw
 	
 Match_UpdateScore:
+	LDA MATCH_P1SCOREBUF
+	BEQ .exit ;Exit if there's no points to be added
+	
+	CLC
+	ADC MATCH_P1SCORE + 1
+	STA MATCH_P1SCORE + 1 ;increase lower digits
+	PHP ;Save carry flag for later
+	
+	;Draw lower digits
+	LDA #LOW(MATCH_P1SCORE + 1)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1SCORE + 1)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_SCORE_PPU + 2)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_SCORE_PPU + 2)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+	
+	PLP ;Restore carry from lower digit addition
+	BCC .exit ;Skip drawing if higher digits aren't changed.
+	
+	INC MATCH_P1SCORE ;Overflow, increase higher digits.
+	
+	;Draw hi digits
+	LDA #LOW(MATCH_P1SCORE)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1SCORE)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_SCORE_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_SCORE_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100
+	
+.exit
+	LDA #0
+	STA MATCH_P1SCOREBUF ;Clear score buffer
+	RTS
 	
 Match_UpdateTimer
 	LDA #0
@@ -318,7 +486,6 @@ Match_MonitorBall:
 	RTS
 
 .replace
-		BIT $6669
 	LDY MATCH_PLAYERID
 	LDA PLAYER_UMBRELLAID, y
 	PHA
@@ -336,9 +503,10 @@ Match_MonitorBall:
 	STA LAUNCHER_PARENTID, x
 	RTS
 	
-Match_ScanForTiles:
+;Calculates how many tiles are to be cleared
+Match_GetTileQ:
 	LDX #0
-	LDY #0
+	STX MATCH_BRICKTOTAL
 .loop
 	LDA COLLISION_MAP, x
 	AND #%00011111
@@ -351,12 +519,13 @@ Match_ScanForTiles:
 .continue
 	INX
 	CPX #240
-	BCS .notfound
+	BCS .end
 	JMP .loop
-.notfound
+.end
 	LDA #FALSE
+	BIT $6666
 	RTS
 .found
-	LDA #TRUE
-	RTS
+	INC MATCH_BRICKTOTAL
+	JMP .continue
 	

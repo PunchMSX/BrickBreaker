@@ -146,24 +146,35 @@ GAME_TRANSITION	.ds 1
 MATCH_LEVEL		.ds 1 ;Current match # (level id), 0 for first run.
 MATCH_TIMER		.ds 1 ;Base 100 number representing the time left.
 MATCH_FRAMES	.ds 1 ;frame timer, increase main timer when full.
-MATCH_P1SCORE	.ds 2
+MATCH_P1SCORE	.ds 2 ;P1 score is BIG Endian
 MATCH_P1LIFE	.ds 1
+MATCH_P1BALL	.ds 1
+
+MATCH_REENTRANT .ds 1 ;used if temporarily exited from match state, false if new stage
+
 MATCH_TIMER_DEFAULT = 99
 MATCH_LIVES_DEFAULT = 5
+MATCH_BALLS_DEFAULT = 3
+
+MATCH_BRICKTOTAL .ds 1
+MATCH_BROKENBRIX .ds 1
+
+
 MATCH_BALLID	.ds 1
 MATCH_PLAYERID	.ds 1
 
 MATCH_P1SCOREBUF .ds 1
-MATCH_P1LIFEBUF	.ds 1
+MATCH_P1BALLBUF	.ds 1
 
 MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writes before the match starts.
 
 ANGLE_SPEEDX	.ds 2
 ANGLE_SPEEDY	.ds 2 ;used in obj.asm for angled ball movement
 
-MATCH_SCORE_PPU = $2064
+MATCH_SCORE_PPU = $2044
 MATCH_LEVEL_PPU = $205B
 MATCH_TIMER_PPU = $204F
+MATCH_BALL_PPU = $235B
 
 
 INTRO_BULLETQ 	.ds 1
@@ -196,6 +207,9 @@ DEBUG_OLDCURX	.ds 1
 DEBUG_OLDCURY	.ds 1
 DEBUG_DECIMALX	.ds 3
 DEBUG_DECIMALY	.ds 3
+
+
+TIMEUP_GO		.ds 1 ;If true transition to gameover state.
 
   .org $600
 COLLISION_MAP	 .ds 16 * 15 ;Full screen collision map
@@ -250,6 +264,8 @@ COLMAP_EDITABLE_Y2 = 13
 	.include "lib/famitone2.asm"
 	.include "audio/headinthesand.asm"
 	.include "audio/sfx.asm"
+	
+	.include "timeup.asm"
 RNG_Next:
 	LDA <RNG_SEED
 	BEQ .zero
