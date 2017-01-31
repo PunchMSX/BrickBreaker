@@ -246,6 +246,9 @@ Match_Play_Init:
 	PLA
 	STA LAUNCHER_PARENTID, x
 	
+	LDA #0
+	JSR FamiToneMusicPlay
+	
 	RTS
 	
 Match_Play:

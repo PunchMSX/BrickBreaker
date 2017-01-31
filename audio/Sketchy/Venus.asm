@@ -141,21 +141,21 @@ Venus_music_data:
 .song0ch1:
 .song0ch1loop:
 .ref8:
-	.db $88,$38,$9d,$36,$9d
+	.db $bf
 .ref9:
-	.db $38,$9d,$2a,$9d
+	.db $bf
 .ref10:
-	.db $38,$9d,$36,$9d
+	.db $bf
 .ref11:
-	.db $38,$9d,$2a,$9d
+	.db $bf
 .ref12:
-	.db $4a,$9d,$40,$9d
+	.db $bf
 .ref13:
-	.db $42,$9d,$3c,$9d
+	.db $bf
 .ref14:
-	.db $4a,$9d,$40,$9d
+	.db $bf
 .ref15:
-	.db $42,$9d,$3c,$9d
+	.db $bf
 	.db $fd
 	.dw .song0ch1loop
 
