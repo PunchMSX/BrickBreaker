@@ -344,6 +344,19 @@ Match_Play_Init:
 	
 	JSR PPU_DrawLargeBase100	
 	
+	;Draw number of "lives" (credits)
+	LDA #LOW(MATCH_P1LIFE)
+	STA <CALL_ARGS + 2
+	LDA #HIGH(MATCH_P1LIFE)
+	STA <CALL_ARGS + 3
+	
+	LDA #LOW(MATCH_LIVES_PPU)
+	STA <CALL_ARGS
+	LDA #HIGH(MATCH_LIVES_PPU)
+	STA <CALL_ARGS + 1
+	
+	JSR PPU_DrawLargeBase100	
+	
 	LDA #0
 	JSR FamiToneMusicPlay
 	
