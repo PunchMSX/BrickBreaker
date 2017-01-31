@@ -227,8 +227,6 @@ COLMAP_EDITABLE_Y2 = 13
 	.include "macros.asm"
 	.include "lib/rle.asm"
 	
-	.include "gamestate.asm"
-	
 	.include "obj.asm"
 	.include "anim.asm"
 	.include "anim.txt"
@@ -249,7 +247,6 @@ COLMAP_EDITABLE_Y2 = 13
  .org $A000
  
 	.include "lib/famitone2.asm"
-	.include "audio/sketchy/Boss.asm"
 	
 RNG_Next:
 	LDA <RNG_SEED
@@ -461,12 +458,12 @@ RESET:
 	LDA #TRUE
 	STA GAME_TRANSITION
 	
-	LDA #1
-	LDX #LOW(Boss_music_data)
-	LDY #HIGH(Boss_music_data)
-	JSR FamiToneInit
-	LDA #0
-	JSR FamiToneMusicPlay
+	;LDA #1
+	;LDX #LOW(Boss_music_data)
+	;LDY #HIGH(Boss_music_data)
+	;JSR FamiToneInit
+	;LDA #0
+	;JSR FamiToneMusicPlay
 	
 ;*********************************************
 	
@@ -527,7 +524,7 @@ NMI:
 	LDA #NEXTFRAME_YES
 	STA PPU_NEXTFRAME
 	
-	JSR FamiToneUpdate
+	;JSR FamiToneUpdate
 	
 	PLP
 	PLA
@@ -542,11 +539,14 @@ NMI:
  .org $C000
  ;DPCM samples goes here, aligned by 64 bytes.
  
- .incbin "audio/sketchy/Boss.dmc" 
+ ;.incbin "audio/sketchy/Boss.dmc" 
 	
  .code
  .bank 3
  .org $E000
+		
+	.include "gamestate.asm"
+	
 	
 Main_Palette:
 	.incbin "art/bg.pal"
