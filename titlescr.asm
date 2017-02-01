@@ -23,11 +23,7 @@ Intro_StateMachine:
 	
 	.db OPC_Delay, 250
 	.db OPC_Delay, 200
-	
-	.db OPC_RAMWrite
-	.dw INTRO_SHOWSCORE
-	.db TRUE
-	
+
 	.db OPC_Halt
 	
 Hiscore_StateMachine:
@@ -87,20 +83,12 @@ Hiscore_StateMachine:
 	
 	.db OPC_RAMWrite
 	.dw INTRO_SHOWSCORE
-	.db FALSE
+	.db TRUE
 	
 	.db OPC_Halt
 	
 
 State_HighScore:
-	LDA INTRO_SHOWSCORE
-	CMP #TRUE
-	BEQ .cont
-	
-	LDA #STATE_TITLE
-	JSR GameState_Change
-.cont
-
 	JSR State_Interpreter
 	
 	LDA CTRLPORT_1

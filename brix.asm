@@ -267,6 +267,7 @@ COLMAP_EDITABLE_Y2 = 13
 	.include "audio/sfx.asm"
 	
 	.include "timeup.asm"
+	.include "ending.asm"
 RNG_Next:
 	LDA <RNG_SEED
 	BEQ .zero

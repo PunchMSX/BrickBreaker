@@ -114,6 +114,26 @@ PPU_DrawNumber:
 	
 .fail ;No space to store order, abort
 	RTS
+;Draws a 0 terminated string.
+;(2 byte PPU address, 2 byte String address)	
+PPU_DrawString:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least two slots to work
+	
+	LDA #PPU_DRAWSTRING
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS 
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS + 1
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS + 2
+	JSR PPU_Queue1_Insert
+	LDA <CALL_ARGS + 3
+	JSR PPU_Queue1_Insert
+	
+.fail ;No space to store order, abort
+	RTS
 	
 ;Draws a 8 bit number in decimal form
 ;(2 byte PPU address, 2 bytes # to be drawn)
