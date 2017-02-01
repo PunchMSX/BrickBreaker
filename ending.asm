@@ -13,6 +13,24 @@ Text_Ending:
 	
 	.db 0
 	
+Text_Credits: ;0C6
+	.db "DESIGN, ART AND&"
+	.db "PROGRAMMING&"
+	.db "        ALEFF CORREA&&"
+	
+	.db "BACKGROUND MUSIC BY&"
+	.db "        CONGUSBONGUS&&"
+	
+	.db "SPECIAL THANKS TO&"
+	.db "  ALL NESDEV MEMBERS&&"
+	.db " DRA. SHEILA ALMEIDA&"
+	.db "  HEITOR, DIEGO, AND&"
+	.db " EVERYONE FROM UTFPR&&"
+	.db "   JAIR AND NATHALIA&&"
+	.db "          MITO OGAWA&&"
+	.db "     AND YOU!&"
+	
+	.db 0
 	
 Ending_StateMachine:
 	.db OPC_DrawString
@@ -31,6 +49,15 @@ Ending_StateMachine:
 	
 	.db OPC_DrawString
 	.dw $2107, Text_Ending
+
+	.db OPC_Delay, 250
+	.db OPC_Delay, 250
+	
+	.db OPC_DrawSquare, $40, 28, 22
+	.dw $2082
+	
+	.db OPC_DrawString
+	.dw $20C6, Text_Credits
 	
 	.db OPC_Delay, 250
 	.db OPC_Delay, 250
@@ -95,7 +122,8 @@ State_Ending:
 	STA <CALL_ARGS + 1
 	
 	JSR PPU_DrawLargeBase100
-	
+	LDA #FALSE
+	STA TIMEUP_GO
 .exit
 	RTS
 	
