@@ -395,6 +395,11 @@ Match_Play:
 .exit
 	RTS
 	
+Match_MonitorBricks:
+	
+
+
+	
 Match_UpdateBalls
 	LDA MATCH_P1BALLBUF
 	BEQ .exit ;Exit if there's no points to be added

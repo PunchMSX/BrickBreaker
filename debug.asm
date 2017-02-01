@@ -178,6 +178,10 @@ Debug_MapEdit:
 	AND #CTRL_B
 	BNE .buttonA
 	
+	LDA #0
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
+	
 	LDA #TILE_BRICK
 	STA <CALL_ARGS
 	LDA DEBUG_CURSORX
@@ -209,6 +213,10 @@ Debug_MapEdit:
 	LDA OLDCTRL_1
 	AND #CTRL_A
 	BNE .endCtrl
+	
+	LDA #1
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
 	
 	LDA #TILE_EMPTY
 	STA <CALL_ARGS

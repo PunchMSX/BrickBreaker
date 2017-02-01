@@ -36,11 +36,25 @@ Match_Instructions5
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.
-	.dw Match_Char0Map
-	.dw 0
+	.dw Match_Level1
+	.dw Match_Level2
 	
-	;11x4
-Match_Char0Map:
+	;11x10
+Match_Level1:
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _E
+	.db _E, _E, _B, _B, _E, _B, _B, _B, _B, _E, _B, _B, _B, _E
+	.db _E, _B, _B, _E, _B, _E, _B, _B, _E, _B, _E, _B, _B, _E
+	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E 
+	
+	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _B, _E 
+	.db _E, _B, _B, _B, _B, _E, _E, _E, _E, _E, _E, _B, _B, _E 
+	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _E	
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+	
+Match_Level2:
 	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E

@@ -187,6 +187,8 @@ Title_Init:
 	LDX #LOW(Intro_StateMachine)
 	LDY #HIGH(Intro_StateMachine)
 	JSR State_Interpreter_Init
+	
+	JSR CollisionMap_TitleBorder
 
 	RTS
 

@@ -154,7 +154,7 @@ MATCH_REENTRANT .ds 1 ;used if temporarily exited from match state, false if new
 
 MATCH_TIMER_DEFAULT = 99
 MATCH_LIVES_DEFAULT = 5
-MATCH_BALLS_DEFAULT = 3
+MATCH_BALLS_DEFAULT = 5
 
 MATCH_BRICKTOTAL .ds 1
 MATCH_BROKENBRIX .ds 1
@@ -481,6 +481,11 @@ RESET:
 	LDX #LOW(headinthesand_music_data)
 	LDY #HIGH(headinthesand_music_data)
 	JSR FamiToneInit
+	
+	LDX #LOW(sounds)
+	LDY #HIGH(sounds)
+	JSR FamiToneSfxInit
+
 	
 ;*********************************************
 	

@@ -352,12 +352,52 @@ CollisionMap_Default:
 	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
 	
+CollisionMap_Intro:
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	
+	.db _Z, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _Z
+	.db _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z, _Z
+	
 ;Writes unbreakable tiles around the playfield
 CollisionMap_DefaultBorder:
 	LDY #0
 	LDX #0
 .loop1
 	LDA CollisionMap_Default, x
+	TAY
+	CMP #TILE_INVALID
+	BCC .hasDurability
+	LDY #0
+.hasDurability
+	ORA Metatile_Durability, y
+	STA COLLISION_MAP, x
+	INX
+	CPX #240
+	BCC .loop1
+	
+	RTS
+	
+;Writes unbreakable tiles around the playfield
+CollisionMap_TitleBorder:
+	LDY #0
+	LDX #0
+.loop1
+	LDA CollisionMap_Intro, x
 	TAY
 	CMP #TILE_INVALID
 	BCC .hasDurability

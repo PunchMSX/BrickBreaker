@@ -898,6 +898,14 @@ Ball_CollisionX:
 	CMP #TILE_BORDER
 	BNE .solid
 	JSR Ball_ReflectX
+	
+	;Play sound effect.
+	PHX
+	LDA #1
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
+	PLX
+	
 	RTS
 ;**************************************************	
 .solid
@@ -920,6 +928,12 @@ Ball_CollisionX:
 	;Reminder that this destroys CALL_ARGS so we can't access the right byte in COL_OFFSET after this.
 	JSR DamageTile
 	
+	;Play sound effect.
+	PHX
+	LDA #1
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
+	PLX
 	RTS
 	
 ;***************************************************
@@ -975,6 +989,14 @@ Ball_CollisionY:
 	CMP #TILE_BORDER
 	BNE .solid
 	JSR Ball_ReflectY
+	
+	;Play sound effect.
+	PHX
+	LDA #1
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
+	PLX
+	
 	RTS
 ;**************************************************	
 .solid
@@ -996,6 +1018,13 @@ Ball_CollisionY:
 
 	;Reminder that this destroys CALL_ARGS so we can't access the right byte in COL_OFFSET after this.
 	JSR DamageTile
+	
+	;Play sound effect.
+	PHX
+	LDA #1
+	LDX #FT_SFX_CH0
+	JSR FamiToneSfxPlay
+	PLX
 	
 	RTS
 	
