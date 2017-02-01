@@ -391,29 +391,24 @@ Umbrella_Collision:
 	SEC
 	SBC OBJ_XPOS, x
 	
-	;If ball is close to center, simply use its center X position.
-	BPL .centerPos
-.centerNeg
-	NEG
-	CMP #3
-	PHP
-	NEG
-	PLP
-	BCS .getEdges
-	JMP .getindex
 	
-.centerPos
-	CMP #3
-	BCC .getindex
-	
-.getEdges
 	;Decides whether to use the left or right corner pos. depending on the object's position
 	BPL .rightside
+	NEG
+	CMP #3
+	BCS .le
+	NEG
+	JMP .getindex
+.le
 	LDA <TEMP_BYTE + 2 ;x2
 	SEC
 	SBC OBJ_XPOS, x
 	JMP .getindex
 .rightside
+	CMP #3
+	BCS .re
+	JMP .getindex ;if close to edge use center X
+.re
 	LDA <TEMP_BYTE + 1 ;x1
 	SEC
 	SBC OBJ_XPOS, x
