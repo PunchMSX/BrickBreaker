@@ -7,8 +7,9 @@ STATE_GAME = 3
 STATE_TIMEUP = 4
 STATE_GAMEOVER = 5
 STATE_ENDING_WIN = 6
-STATE_DEBUG = 7
-STATE_ERROR = 8
+STATE_WIN = 7
+STATE_DEBUG = 8
+STATE_ERROR = 9
 	
 GameState_Change:
 	LDX GAME_STATE
@@ -26,6 +27,7 @@ GameState_Table:
 	.dw State_Timeup - 1
 	.dw State_Gameover - 1 ;gameover
 	.dw 0 ;ending_win
+	.dw State_Win - 1 ;win
 	.dw Debug_MapEdit - 1 ;debug.asm
 	
 GameStateInit_Table:
@@ -36,6 +38,7 @@ GameStateInit_Table:
 	.dw State_Timeup_Init - 1
 	.dw State_Gameover_Init - 1 ;gameover
 	.dw 0 ;ending_win
+	.dw State_Win_Init - 1 ;win
 	.dw Debug_MapEdit_Init - 1 ;debug.asm
 	
 GameStateManager:
@@ -364,9 +367,10 @@ Match_Play_Init:
 	
 Match_Play:
 	JSR Match_MonitorBall
+	JSR Match_MonitorBricks
 	JSR Match_UpdateScore
 	JSR Match_UpdateBalls
-	
+
 	LDA MATCH_P1BALL
 	BEQ .gameover
 	
@@ -396,9 +400,29 @@ Match_Play:
 	RTS
 	
 Match_MonitorBricks:
+	LDA MATCH_BROKENBRIX
+	CMP MATCH_BRICKTOTAL
+
+	BCS .win
+	RTS
+.win
+	INC MATCH_LEVEL
+	LDA MATCH_LEVEL
+	CMP #GAME_MAXLEVELS + 1
+	BCS .ending
 	
-
-
+	LDA #FALSE
+	STA MATCH_REENTRANT
+	LDA #STATE_WIN
+	JSR GameState_Change
+	RTS	
+	
+.ending
+	LDA #FALSE
+	STA MATCH_REENTRANT
+	LDA #STATE_GAMEOVER
+	JSR GameState_Change
+	RTS
 	
 Match_UpdateBalls
 	LDA MATCH_P1BALLBUF
@@ -442,6 +466,7 @@ Match_UpdateScore:
 	CLC
 	ADC MATCH_P1SCORE + 1
 	STA MATCH_P1SCORE + 1 ;increase lower digits
+	CMP #100
 	PHP ;Save carry flag for later
 	
 	;Draw lower digits
@@ -460,6 +485,11 @@ Match_UpdateScore:
 	PLP ;Restore carry from lower digit addition
 	BCC .exit ;Skip drawing if higher digits aren't changed.
 	
+	LDA MATCH_P1SCORE + 1
+	SEC
+	SBC #100
+	STA MATCH_P1SCORE + 1
+
 	INC MATCH_P1SCORE ;Overflow, increase higher digits.
 	
 	;Draw hi digits

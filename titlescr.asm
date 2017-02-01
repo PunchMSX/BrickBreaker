@@ -11,6 +11,11 @@ Text_00:
 	.db 1, 0
 	
 Intro_StateMachine:
+	.db OPC_DrawSquare, $40, 32, 30
+	.dw $2000
+	
+	.db OPC_Delay, 50
+
 	.db OPC_DrawRLE
 	.dw $2000, bg_Title_Screen
 	

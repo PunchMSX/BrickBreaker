@@ -15,6 +15,9 @@ Text_GoodLuck:
 Text_Gameover:
 	.db "GAME OVER :("
 	.db 0
+Text_Welldone:
+	.db "WELL DONE! :)"
+	.db 0
 	
 Match_Instructions1
 	.db "INSTRUCTIONS"
@@ -36,11 +39,44 @@ Match_Instructions5
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.
-	.dw Match_Level1
+	.dw Match_Level5
 	.dw Match_Level2
+	.dw Match_Level3
+	.dw Match_Level4
+	.dw Match_Level5
+	
+GAME_MAXLEVELS = 4
 	
 	;11x10
+
 Match_Level1:
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E
+	.db _E, _B, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _B, _E
+	.db _E, _B, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _B, _E
+	.db _E, _B, _E, _E, _B, _B, _B, _B, _B, _B, _B, _E, _B, _E
+	
+	.db _E, _B, _E, _E, _E, _E, _E, _E, _E, _E, _B, _E, _B, _E
+	.db _E, _B, _E, _E, _E, _E, _E, _E, _E, _E, _B, _E, _B, _E
+	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E	
+	
+	
+Match_Level2:
+	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B
+	
+	.db _B, _B, _B, _B, _B, _G, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+Match_Level3:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _E
 	.db _E, _E, _B, _B, _E, _B, _B, _B, _B, _E, _B, _B, _B, _E
@@ -53,17 +89,29 @@ Match_Level1:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-	
-Match_Level2:
-	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
+Match_Level4:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
-	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
-	.db _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B
+	.db _E, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _M, _E
 	
-	.db _B, _B, _B, _B, _B, _G, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _E, _E, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _M, _E
+	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _M, _E	
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+Match_Level5:
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+	.db _M, _B, _M, _B, _M, _B, _M, _B, _M, _B, _M, _B, _M, _B
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _B, _M, _B, _M, _B, _M, _B, _M, _B, _M, _B, _M, _B, _M
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	

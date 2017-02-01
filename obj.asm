@@ -918,6 +918,10 @@ Ball_CollisionX:
 	BEQ .brick
 	CMP #TILE_DAMAGEDBRICK
 	BEQ .brick
+	CMP #TILE_METALBRICK
+	BEQ .brick
+	CMP #TILE_DAMAGEDMETALBRICK
+	BEQ .brick
 	JMP .nonSolid
 .brick
 	JSR Ball_ReflectX
@@ -1008,6 +1012,10 @@ Ball_CollisionY:
 	CMP #TILE_BRICK
 	BEQ .brick
 	CMP #TILE_DAMAGEDBRICK
+	BEQ .brick
+	CMP #TILE_METALBRICK
+	BEQ .brick
+	CMP #TILE_DAMAGEDMETALBRICK
 	BEQ .brick
 	JMP .nonSolid
 .brick
