@@ -39,13 +39,13 @@ Match_Instructions5
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.
-	.dw Match_Level5
+	.dw Match_Level1
 	.dw Match_Level2
 	.dw Match_Level3
 	.dw Match_Level4
 	.dw Match_Level5
 	
-GAME_MAXLEVELS = 4
+GAME_MAXLEVELS = 5
 	
 	;11x10
 
