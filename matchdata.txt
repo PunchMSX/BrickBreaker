@@ -77,7 +77,7 @@ Match_Level2:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B
 	
-	.db _B, _B, _B, _B, _B, _G, _B, _B, _B, _B, _B, _B, _B, _B
+	.db _B, _B, _B, _B, _B, _E, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
