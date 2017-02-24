@@ -395,7 +395,7 @@ Umbrella_Collision:
 	;Decides whether to use the left or right corner pos. depending on the object's position
 	BPL .rightside
 	NEG
-	CMP #3
+	CMP #7
 	BCS .le
 	NEG
 	JMP .getindex
@@ -405,7 +405,7 @@ Umbrella_Collision:
 	SBC OBJ_XPOS, x
 	JMP .getindex
 .rightside
-	CMP #3
+	CMP #7
 	BCS .re
 	JMP .getindex ;if close to edge use center X
 .re

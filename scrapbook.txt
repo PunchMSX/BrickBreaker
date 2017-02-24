@@ -194,3 +194,10 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 +Match now draws number of credits.
 
 +Title screen now uploads own collision map.
+
+
+24/02
++Hello NesDev! This is now licensed under MIT License.
+-I was ranked 13th (out of 18 entries) and lost to a non-game, even. RIP!
+
++Updated umbrella/ball collision threshold. Now controlling the ball's direction is less annoying/buggy, game is way more responsive.
