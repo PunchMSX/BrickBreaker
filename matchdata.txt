@@ -40,6 +40,11 @@ Match_Instructions5
 	.db "DESTROY ALL BRICK TILES!"
 	.db 0
 	
+Text_Text_Text:
+	.db "THIS GAME IS DEDICATED TO EVERYONE.&"
+	.db "YES, EVERYONE.&QUIT LOOKING AT THE&"
+	.db "ROM BINARY, THANKS :)"
+	
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.

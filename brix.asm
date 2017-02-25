@@ -2,12 +2,12 @@
 ;*** B    R    I    X      B    A    T    T    L    E ***
 ;********************************************************
 ;- C o p y r i g h t   2 0 1 6   A l e f f   C o r r e a -
-;Project start: 05/06/2016   ||     Version ZERO
+;Project start: 05/06/2016   ||     Version MULTICART
 
 	.inesmap 0 ;no mapper
 	.inesmir 0 ;Vertical
 	.ineschr 1 ;8kb Character ROM
-	.inesprg 2 ;32kb Program ROM
+	.inesprg 1 ;16kb Program ROM - NROM-128
 	
 TRUE = 1
 FALSE = 0
@@ -239,7 +239,7 @@ COLMAP_EDITABLE_Y2 = 13
 
  .code
  .bank 0
- .org $8000
+ .org $C000
 	.include "macros.asm"
 	.include "lib/rle.asm"
 	
@@ -260,7 +260,7 @@ COLMAP_EDITABLE_Y2 = 13
 	.include "metatile.asm"
 
  .bank 1
- .org $A000
+ .org $E000
  
 	.include "lib/famitone2.asm"
 	.include "audio/headinthesand.asm"
@@ -557,15 +557,7 @@ NMI:
 	PLA	;Restore Processor Status
 	RTI
 	
- .data
- .bank 2
- .org $C000
-
- 
- .code
- .bank 3
- .org $E000
-		
+	
 	.include "gamestate.asm"
 	
 	
@@ -586,6 +578,6 @@ bg_HighScore:
 	 .dw 0
  
 ;CHR
- .bank 4
+ .bank 2
  .org $0000
 	.incbin "art/chardata.chr"
