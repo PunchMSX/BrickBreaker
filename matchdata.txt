@@ -43,20 +43,22 @@ Match_Instructions5
 ;*****************************************************
 Match_EnemyMaps:
 	.dw 0 ;Tutorial doesn't have a collision map.
-	.dw Match_Level1
-	.dw Match_Level2
-	.dw Match_Level3
-	.dw Match_Level4
-	.dw Match_Level5
-	.dw Match_Level6
-	.dw Match_Level7
-	.dw Match_Level8
+	.dw Match_Level1_Spiral
+	.dw Match_Level2_Teeth
+	.dw Match_Level3_Cuteface
+	.dw Match_Level4_1stMetal
+	.dw Match_Level5_Pillbox
+	.dw Match_Level6_Pachinko
+	.dw Match_Level7_NES
+	.dw Match_Level8_Vase
+	.dw Match_Level9_Factory
+	.dw Match_Level10_Fort
 	
-GAME_MAXLEVELS = 8
+GAME_MAXLEVELS = 10
 	
 	;11x10
 
-Match_Level1:
+Match_Level1_Spiral:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E
 	.db _E, _B, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _B, _E
@@ -70,7 +72,7 @@ Match_Level1:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E	
 	
 	
-Match_Level2:
+Match_Level2_Teeth:
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E, _B, _E
@@ -83,7 +85,7 @@ Match_Level2:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-Match_Level3:
+Match_Level3_Cuteface:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E, _E
 	.db _E, _E, _B, _B, _E, _B, _B, _B, _B, _E, _B, _B, _B, _E
@@ -96,7 +98,7 @@ Match_Level3:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-Match_Level4:
+Match_Level4_1stMetal:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _E
@@ -109,7 +111,7 @@ Match_Level4:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 
-Match_Level5:
+Match_Level5_Pillbox:
 	.db _E, _E, _E, _E, _E, _M, _M, _M, _M, _E, _E, _E, _E, _E
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
@@ -122,7 +124,7 @@ Match_Level5:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-Match_Level6:
+Match_Level6_Pachinko:
 	.db _B, _B, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _B, _B
 	.db _B, _B, _E, _E, _E, _B, _M, _M, _B, _E, _E, _E, _B, _B
 	.db _B, _B, _M, _E, _E, _M, _B, _B, _M, _E, _E, _M, _B, _B
@@ -135,20 +137,46 @@ Match_Level6:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-Match_Level7:
-	.db _E, _M, _E, _E, _M, _E, _M, _M, _M, _E, _E, _M, _M, _E
-	.db _E, _M, _M, _E, _M, _E, _M, _E, _E, _E, _M, _E, _E, _E
-	.db _E, _M, _E, _M, _M, _E, _M, _M, _E, _E, _M, _M, _E, _E
-	.db _E, _M, _E, _E, _M, _E, _M, _E, _E, _E, _E, _E, _M, _E
-	.db _E, _M, _E, _E, _M, _E, _M, _M, _M, _E, _M, _M, _E, _E
+Match_Level7_NES:
+	.db _E, _M, _E, _E, _M, _E, _B, _B, _B, _E, _E, _B, _B, _E
+	.db _E, _M, _M, _E, _M, _E, _B, _E, _E, _E, _B, _E, _E, _E
+	.db _E, _M, _E, _M, _M, _E, _B, _B, _E, _E, _E, _B, _E, _E
+	.db _E, _M, _E, _E, _M, _E, _B, _E, _E, _E, _E, _E, _B, _E
+	.db _E, _M, _E, _E, _M, _E, _B, _B, _B, _E, _B, _B, _E, _E
 	
-	.db _E, _B, _E, _B, _B, _E, _B, _B, _E, _B, _B, _E, _B, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+Match_Level8_Vase:
+	.db _E, _E, _E, _E, _E, _E, _B, _B, _E, _E, _E, _E, _E, _E
+	.db _E, _M, _M, _M, _M, _E, _B, _B, _E, _M, _M, _M, _M, _E
+	.db _E, _M, _E, _E, _E, _E, _B, _B, _E, _E, _E, _E, _M, _E
+	.db _B, _M, _E, _B, _B, _B, _B, _B, _B, _B, _B, _E, _M, _B
+	.db _E, _M, _E, _B, _B, _B, _B, _B, _B, _B, _B, _E, _M, _E 
+	
+	.db _E, _M, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _M, _E
+	.db _E, _E, _M, _M, _M, _M, _M, _M, _M, _M, _M, _M, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
+	
+Match_Level9_Factory:
+	.db _E, _E, _E, _E, _E, _E, _B, _B, _B, _B, _B, _B, _E, _E
+	.db _E, _E, _E, _E, _M, _B, _M, _B, _B, _B, _B, _E, _E, _E
+	.db _E, _E, _E, _E, _M, _E, _M, _E, _E, _E, _E, _E, _E, _E
+	.db _E, _E, _E, _M, _M, _M, _M, _M, _M, _M, _M, _E, _E, _E
+	.db _E, _E, _E, _M, _M, _M, _M, _M, _M, _M, _M, _E, _E, _E
+	
+	.db _E, _E, _E, _M, _M, _E, _E, _M, _M, _M, _M, _E, _E, _E
+	.db _E, _B, _B, _M, _M, _E, _E, _M, _M, _M, _M, _B, _B, _E
 	.db _E, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _E
-	.db _E, _B, _B, _B, _E, _E, _E, _E, _E, _E, _B, _B, _B, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	
-Match_Level8:
+Match_Level10_Fort:
 	.db _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E, _E
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
 	.db _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B, _B
