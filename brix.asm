@@ -1,8 +1,8 @@
-;********************************************************
-;*** B    R    I    X      B    A    T    T    L    E ***
-;********************************************************
+;***********************************************************
+;*** B    R   I   C  K     B  R   E   A    K     E     R ***
+;***********************************************************
 ;- C o p y r i g h t   2 0 1 6   A l e f f   C o r r e a -
-;Project start: 05/06/2016   ||     Version MULTICART
+;Project start: 05/06/2016   ||     Version MULTICART2
 
 	.inesmap 0 ;no mapper
 	.inesmir 0 ;Vertical
@@ -466,7 +466,7 @@ RESET:
 	STA $2005
 	STA $2005 ;set scroll to (0,0)
 	
-	LDA #STATE_DEBUG
+	LDA #STATE_TITLE
 	STA GAME_STATE
 	LDA #255
 	STA GAME_OLDSTATE
