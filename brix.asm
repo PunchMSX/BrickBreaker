@@ -500,6 +500,9 @@ Mainloop:
 		
 		JSR ObjectList_UpdateAll
 		JSR ObjectList_OAMUpload
+		NOP
+		NOP
+		NOP
 		;JSR DrawScanline
 	
 	LDA #NEXTFRAME_YES

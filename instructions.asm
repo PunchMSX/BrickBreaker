@@ -159,7 +159,7 @@ State_Instructions:
 	LDY #$BC
 	LDA #OBJ_STATIC
 	JSR ObjectList_Insert
-	LDA #13
+	LDA #14
 	STA OBJ_METASPRITE, x
 	STX INSTRUCT_ARROWS
 	
@@ -170,7 +170,7 @@ State_Instructions:
 	
 .INSERT3
 	LDX INSTRUCT_ARROWS
-	LDA #16
+	LDA #13
 	STA OBJ_METASPRITE, x
 	
 	LDA #0
