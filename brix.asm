@@ -572,6 +572,10 @@ bg_Playfield:
 bg_HighScore:
 	.incbin "art/hiscore.rle"
 	
+ .org $FFD0
+RESERVED_MULTICART:
+	.db "TEL.TOKYO-JAPAN 044(XXX)XXXX EXTENTION 304"
+	
  .org $FFFA
 	 .dw NMI
 	 .dw RESET
