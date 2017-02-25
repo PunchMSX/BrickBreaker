@@ -867,6 +867,14 @@ DamageTile:
 .increasegoalcounter
 	LDA COLLISION_MAP, y
 	AND #%00011111
+	CMP #TILE_METALSHARDS
+	BNE .isBrickRubble
+	INC MATCH_P1SCOREBUF
+	INC MATCH_P1SCOREBUF
+	INC MATCH_P1SCOREBUF
+	INC MATCH_P1SCOREBUF ;if metal brick was destroyed, award 4x points.
+	
+.isBrickRubble
 	CMP #TILE_RUBBLE
 	BNE .schedule
 	INC MATCH_P1SCOREBUF

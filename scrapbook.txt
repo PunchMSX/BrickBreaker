@@ -207,3 +207,5 @@ Hilariously enough, this bug survived into the last commit without me noticing. 
 
 -There's a bug related to the OAM Upload routine during the instruction screen, and adding three NOPs where the Drawscanline jsr would be makes it get stuck on an infinite loop on OAM upload. Remove the NOPs and it merely "hides" the sprite. Using the same combination of metasprites in other situations doesn't show those symptoms, what could it be? And how did it stay hidden for so long?
 +++++ In INSERT3 (instructions.asm) I was using an invalid ID (ball shadow off by one, 16 instead of 15) and that's the reason for the OAM routine to get confused. There seems to be more than it meets the eye (why moving the OAM routine three bytes changed how the bug worked so drastically?) but I can't find it if it exists. I'm considering this fixed but it's good to keep an eye on any weird sprite behaviour.
+
++Breaking a metal brick now awards 400 pts.
