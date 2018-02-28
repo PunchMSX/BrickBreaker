@@ -14,6 +14,9 @@ State_Table:
 	.dw _OPC_DrawMetatileRow - 1
 	.dw _OPC_RAMWrite - 1
 	.dw _OPC_InsertMetasprite - 1
+	.dw _OPC_ScreenOff - 1
+	.dw _OPC_ScreenOn - 1
+	.dw _OPC_DrawRLEBurst - 1
 	
 ;1-byte ops that represent a function call 
 ;(I don't remember what OPC stands for :P)
@@ -27,7 +30,10 @@ OPC_DrawString = 6
 OPC_DrawMetatileRow = 7
 OPC_RAMWrite = 8
 OPC_InsertMetasprite = 9
-OPC_Invalid = 10
+OPC_ScreenOff = 10
+OPC_ScreenOn = 11
+OPC_DrawRLEBurst = 12
+OPC_Invalid = 13
 
 ;X, Y = Low/High address for first opcode to be interpreted.
 State_Interpreter_Init:
@@ -115,6 +121,36 @@ _OPC_Error:
 _OPC_Halt:
 	LDA #FALSE
 	STA <INTERPRETER_STEP
+	RTS
+	
+;Sends a command into the PPU Queue to turn it off.
+;Arguments = 0 bytes.
+_OPC_ScreenOff:
+	JSR PPU_Queue1_Capacity
+	CMP #1
+	BCC .fail
+	
+	LDA #PPU_VIDEO_OFF
+	JSR PPU_Queue1_Insert
+	
+	JSR Interpreter_AllowStep
+	
+.fail
+	RTS
+	
+;Sends a command into the PPU Queue to turn it on.
+;Arguments = 0 bytes.
+_OPC_ScreenOn:
+	JSR PPU_Queue1_Capacity
+	CMP #1
+	BCC .fail
+	
+	LDA #PPU_VIDEO_ON
+	JSR PPU_Queue1_Insert
+	
+	JSR Interpreter_AllowStep
+	
+.fail
 	RTS
 	
 ;Waits for a number of frames before proceeding to next opcode.
@@ -291,6 +327,36 @@ _OPC_DrawRLE:
 	
 .fail ;If PPU queue lacks space for our command, try again next frame
 	RTS
+	
+;ACTIVATE ONLY AFTER RUNNING OPC_ScreenOff!!!!!!
+;Set a PPU RLE write to be done in a single frame, during PPU BURST.
+;Arguments: 4 bytes (PPU Target, CPU source)
+_OPC_DrawRLEBurst:
+	JSR PPU_Queue1_Capacity
+	CMP #5
+	BCC .fail ;Needs at least 4 slots to work
+	
+	;PPU Interrupt command
+	LDA #PPU_RLE_BURST
+	JSR PPU_Queue1_Insert
+	
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	;CPU address
+	LPC
+	JSR PPU_Queue1_Insert
+	LPC
+	JSR PPU_Queue1_Insert
+	
+	JSR Interpreter_AllowStep
+	
+.fail ;If PPU queue lacks space for our command, try again next frame
+	RTS
+
+
 	
 ;Set a PPU RLE write to be done during VBlank (NMI interrupt)
 ;Arguments: 5 bytes (Tile #, Width, Height, PPUAddr)

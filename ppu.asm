@@ -1,4 +1,12 @@
 ;PPU.asm
+;Functions without an underline prefix (ie. "PPU_DrawString")
+;are meant to be called from outside (using CALL_ARGS to send parameters)
+;to make it easy to schedule execution of a command by the PPU State machine.
+;They don't necessarily need to be executed by the Script state machine (state.asm).
+
+;Functions with an underline prefix (ie. "_PPU_DrawString")
+;are internal to the state machine, they execute the commands themselves
+;during VBlank time.
 
 PPU_INVALID = 255
 PPU_IDLE = 0
@@ -10,6 +18,9 @@ PPU_NUMBER_100 = 5
 PPU_DRAWSTRING = 6
 PPU_METATILEROW = 7
 PPU_NUMBER_100_LARGE = 8
+PPU_VIDEO_OFF = 9
+PPU_VIDEO_ON = 10
+PPU_RLE_BURST = 11
 
 PPU_Command_Table:
 	.dw _PPU_Idle - 1
@@ -21,6 +32,9 @@ PPU_Command_Table:
 	.dw _PPU_DrawString - 1
 	.dw _PPU_DrawMetatileRow - 1
 	.dw _PPU_DrawLargeBase100Number - 1
+	.dw _PPU_VideoOFF - 1
+	.dw _PPU_VideoON - 1
+	.dw _PPU_RLE_BURST - 1
 	
 PPU_MAXWRITES = 8 ;Maximum # of bytes to be written during VBlank, conservative guess.
 RLE_MAXBYTES = 20
@@ -163,6 +177,24 @@ PPU_DrawLargeBase100:
 	RTS
 	
 _PPU_Idle:
+	JSR PPU_AllowStep
+	RTS
+	
+;Orders PPU to turn video off at the end of this frame onwards.
+;No parameters on stack
+_PPU_VideoOFF:
+	LDA #PPU_DISPLAY_OFF
+	STA PPU_DISPLAY
+	
+	JSR PPU_AllowStep
+	RTS
+	
+;Orders PPU to turn video on at the end of this frame onwards.
+;No parameters on stack
+_PPU_VideoON:
+	LDA #PPU_DISPLAY_ON
+	STA PPU_DISPLAY
+	
 	JSR PPU_AllowStep
 	RTS
 	
@@ -730,7 +762,43 @@ _PPU_SqRepeat:;(Tile #, Width, Height, PPUAddr)
 	STA PPU_STEP
 	RTS
 	
+;RUN THIS ONLY IF THE SCREEN IS OFF!
+_PPU_RLE_BURST:
+	LDA PPU_DISPLAY
+	CMP #PPU_DISPLAY_OFF
+	BNE .end ;EXIT if display wasn't turned off properly.
 	
+	LDA PPU_NUMWRITES
+	BEQ .start
+	RTS ;Quit if there were writes before this command, execute next vblank.
+	
+.start
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM
+	JSR PPU_Queue1_Retrieve
+	STA PPUADDR_NAM + 1
+	JSR PPU_Queue1_Retrieve
+	STA CPUADDR_NAM
+	JSR PPU_Queue1_Retrieve
+	STA CPUADDR_NAM + 1
+	
+	LDA $2002
+	
+	LDA PPUADDR_NAM + 1
+	STA $2006
+	LDA PPUADDR_NAM
+	STA $2006
+	
+	LDA CPUADDR_NAM
+	TAX
+	LDA CPUADDR_NAM + 1
+	TAY
+	
+	JSR unrle ;1 frame RLE full write, this will glitch if not in BURST mode.
+	
+.end
+	JSR PPU_AllowStep ;Drawing finished
+	RTS
 	
 _PPU_RLE:
 	LDA PPU_NUMWRITES

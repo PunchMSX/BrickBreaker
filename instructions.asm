@@ -10,10 +10,12 @@ Instruction0_StateMachine:
 	
 	.db OPC_Delay, 60
 	
-	.db OPC_DrawRLE
+	.db OPC_ScreenOff
+
+	.db OPC_DrawRLEBurst
 	.dw $2000, bg_Playfield
 	
-	.db OPC_Delay, 60
+	.db OPC_ScreenOn
 	
 	.db OPC_RAMWrite
 	.dw INSTRUCT_SYNC

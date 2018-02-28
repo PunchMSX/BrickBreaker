@@ -2,7 +2,7 @@
 ;*** B    R   I   C  K     B  R   E   A    K     E     R ***
 ;***********************************************************
 ;- C o p y r i g h t   2 0 1 6   A l e f f   C o r r e a -
-;Project start: 05/06/2016   ||     Version MULTICART2
+;Project start: 05/06/2016
 
 	.inesmap 0 ;no mapper
 	.inesmir 0 ;Vertical
@@ -93,6 +93,11 @@ PPUADDR_ATR .ds 2
 CPUADDR_NAM .ds 2 ;Address in PPU memory for the Background/Attributes
 CPUADDR_ATR .ds 2
 
+PPU_DISPLAY	.ds 1 ;Defines whether or not we need to turn the PPU display on/off.
+PPU_DISPLAY_ON 	= 0
+PPU_DISPLAY_OFF = 1
+PPU_BURST = PPU_DISPLAY_OFF
+
 PPU_DRAW 	.ds 1
 
 PPU_COMMAND	.ds 1 ;Current command undergoing execution by the NMI thread.
@@ -167,6 +172,7 @@ MATCH_P1SCOREBUF .ds 1
 MATCH_P1BALLBUF	.ds 1
 
 MATCH_START		.ds 1 ;true/false - used to sync with state machine driven PPU writes before the match starts.
+TITLE_START	= MATCH_START ;reusing variable for same functionality @ title screen.
 
 ANGLE_SPEEDX	.ds 2
 ANGLE_SPEEDY	.ds 2 ;used in obj.asm for angled ball movement
@@ -473,7 +479,6 @@ RESET:
 	
 	JSR ObjectList_Init	;Run this only once
 	JSR PPU_InitQueues
-	JSR HiScores_Init
 	
 	LDA #TRUE
 	STA GAME_TRANSITION
@@ -500,9 +505,7 @@ Mainloop:
 		
 		JSR ObjectList_UpdateAll
 		JSR ObjectList_OAMUpload
-		NOP
-		NOP
-		NOP
+
 		;JSR DrawScanline
 	
 	LDA #NEXTFRAME_YES
@@ -537,9 +540,21 @@ NMI:
 	JSR PPU_QueueInterpreter
 	
 .cleanup:
+	LDA PPU_DISPLAY
+	CMP #PPU_DISPLAY_OFF
+	BEQ .cleanup_ppu_off
+	
+.cleanup_ppu_on
 	LDA #%00011110
 	STA $2001 ;enable ppu rendering
+	JMP .cleanup_continue
 	
+.cleanup_ppu_off
+	LDA #%00000000
+	STA $2001
+	JMP .cleanup_continue ;I know this is redundant. Added for clarity.
+	
+.cleanup_continue
 	LDA #$88
 	STA $2000
 	

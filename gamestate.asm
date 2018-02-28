@@ -22,7 +22,7 @@ GameState_Change:
 GameState_Table:
 	.dw State_Instructions - 1 ;instructions.asm
 	.dw Title_Loop - 1 ;titlescr.asm
-	.dw State_HighScore - 1 ;titlescr.asm
+	.dw 0 ;titlescr.asm
 	.dw State_Match - 1
 	.dw State_Timeup - 1
 	.dw State_Gameover - 1 ;gameover
@@ -33,7 +33,7 @@ GameState_Table:
 GameStateInit_Table:
 	.dw State_Instructions_Init - 1 ;instrutions.asm
 	.dw Title_Init - 1 ;titlescr.asm
-	.dw State_HiScore_Init - 1 ;titlescr.asm
+	.dw 0
 	.dw State_Match_Init - 1
 	.dw State_Timeup_Init - 1
 	.dw State_Gameover_Init - 1 ;gameover
@@ -74,7 +74,7 @@ GameStateManager:
  
 Match0_StateMachine:
 	.db OPC_RAMWrite
-	.dw INSTRUCT_SYNC
+	.dw INSTRUCT_SYNC ;Resets counter that controls instruction screen.
 	.db 0
 
 	.db OPC_DrawSquare, $40, 32, 30
@@ -82,10 +82,14 @@ Match0_StateMachine:
 	
 	.db OPC_Delay, 60
 	
-	.db OPC_DrawRLE
+	.db OPC_ScreenOff
+
+	.db OPC_DrawRLEBurst
 	.dw $2000, bg_Playfield
 	
-	.db OPC_Delay, 60
+	.db OPC_ScreenOn
+	
+	.db OPC_Delay, 30
 	
 	.db OPC_DrawMetatileRow
 	.dw $2082, COLLISION_MAP + 33
@@ -132,6 +136,7 @@ Match0_StateMachine:
 	.db 14
 	
 	.db OPC_Delay, 50
+	
 	
 	.db OPC_DrawSquare, $20, 6, 2
 	.dw $21CD
