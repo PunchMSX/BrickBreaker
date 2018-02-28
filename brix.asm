@@ -462,8 +462,8 @@ RESET:
 	CPX #32
 	BNE .loadPaletteLoop
 		
-	LDA #%00011110
-	STA $2001 ;enable ppu rendering
+	LDA #0
+	STA $2001 ;disable ppu rendering (enabled in titlescreen init).
 	
 	LDA #$88
 	STA $2000
@@ -479,6 +479,9 @@ RESET:
 	
 	JSR ObjectList_Init	;Run this only once
 	JSR PPU_InitQueues
+	
+	LDA #PPU_DISPLAY_OFF
+	STA PPU_DISPLAY
 	
 	LDA #TRUE
 	STA GAME_TRANSITION
